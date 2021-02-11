@@ -1,6 +1,8 @@
 # Auth
 
-**Authentication for PHP. Simple, lightweight and secure.**
+**PSR compatible authentication for PHP.**
+
+Based on [PHP-Auth](https://github.com/delight-im/PHP-Auth)
 
 Written once, to be used everywhere.
 
@@ -16,7 +18,7 @@ Completely framework-agnostic and database-agnostic.
 
 ## Requirements
 
- * PHP 5.6.0+
+ * PHP 7.2.0+
    * PDO (PHP Data Objects) extension (`pdo`)
      * MySQL Native Driver (`mysqlnd`) **or** PostgreSQL driver (`pgsql`) **or** SQLite driver (`sqlite`)
    * OpenSSL extension (`openssl`)
