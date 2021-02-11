@@ -6,6 +6,6 @@
  * Licensed under the MIT License (https://opensource.org/licenses/MIT)
  */
 
-namespace Delight\Auth;
+namespace Auth;
 
 class TokenExpiredException extends AuthException {}

@@ -6,7 +6,7 @@
  * Licensed under the MIT License (https://opensource.org/licenses/MIT)
  */
 
-namespace Delight\Auth;
+namespace Auth;
 
 use Delight\Base64\Base64;
 use Delight\Cookie\Cookie;
