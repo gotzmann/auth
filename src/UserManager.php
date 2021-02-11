@@ -9,7 +9,8 @@
 namespace Auth;
 
 use Delight\Base64\Base64;
-use Delight\Cookie\Session;
+// TODO Should use PSR-7 Sessions here
+// use Delight\Cookie\Session;
 use Delight\Db\PdoDatabase;
 use Delight\Db\PdoDsn;
 use Delight\Db\Throwable\Error;
@@ -123,7 +124,8 @@ abstract class UserManager {
 	 * @see confirmEmailAndSignIn
 	 */
 	protected function createUserInternal($requireUniqueUsername, $email, $password, $username = null, callable $callback = null) {
-		\ignore_user_abort(true);
+		// TODO WTF?
+		// \ignore_user_abort(true);
 
 		$email = self::validateEmailAddress($email);
 		$password = self::validatePassword($password);
@@ -229,7 +231,8 @@ abstract class UserManager {
 	 */
 	protected function onLoginSuccessful($userId, $email, $username, $status, $roles, $forceLogout, $remembered) {
 		// re-generate the session ID to prevent session fixation attacks (requests a cookie to be written on the client)
-		Session::regenerate(true);
+		// TODO Use PSR-7 Session
+		// Session::regenerate(true);
 
 		// save the user data in the session variables maintained by this library
 		$_SESSION[self::SESSION_FIELD_LOGGED_IN] = true;

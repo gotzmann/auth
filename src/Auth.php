@@ -31,6 +31,11 @@ final class Auth extends UserManager {
 	/** @var string the name of the cookie used for the 'remember me' feature */
 	private $rememberCookieName;
 
+	// TODO Adding PSR-7 twists
+	private $request;
+	private $response;
+	private $session = [];
+
 	/**
 	 * @param PdoDatabase|PdoDsn|\PDO $databaseConnection the database connection to operate on
 	 * @param string|null $ipAddress (optional) the IP address that should be used instead of the default setting (if any), e.g. when behind a proxy
@@ -39,23 +44,37 @@ final class Auth extends UserManager {
 	 * @param int|null $sessionResyncInterval (optional) the interval in seconds after which to resynchronize the session data with its authoritative source in the database
 	 * @param string|null $dbSchema (optional) the schema name for all database tables used by this component
 	 */
-	public function __construct($databaseConnection, $ipAddress = null, $dbTablePrefix = null, $throttling = null, $sessionResyncInterval = null, $dbSchema = null) {
-		parent::__construct($databaseConnection, $dbTablePrefix, $dbSchema);
+// TODO Refactoring with PSR-7 and Sessions in mind
+//	public function __construct($databaseConnection, $ipAddress = null, $dbTablePrefix = null, $throttling = null, $sessionResyncInterval = null, $dbSchema = null) {
+	public function __construct($databaseConnection, $request = null, &$response = null) {
+//		parent::__construct($databaseConnection, $dbTablePrefix, $dbSchema);
+		parent::__construct($databaseConnection);
 
-		$this->ipAddress = !empty($ipAddress) ? $ipAddress : (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null);
+		$this->request = $request;
+		$this->response = &$response;
+		// TODO Init session with data
+
+		// TODO SERVER legacy
+		// $this->ipAddress = !empty($ipAddress) ? $ipAddress : (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null);
 		$this->throttling = isset($throttling) ? (bool) $throttling : true;
 		$this->sessionResyncInterval = isset($sessionResyncInterval) ? ((int) $sessionResyncInterval) : (60 * 5);
-		$this->rememberCookieName = self::createRememberCookieName();
+		// TODO Re-enable remembering
+		// $this->rememberCookieName = self::createRememberCookieName();
 
+		// TODO Do not interfere with PSR-7
 		$this->initSessionIfNecessary();
-		$this->enhanceHttpSecurity();
+		// $this->enhanceHttpSecurity();
 
-		$this->processRememberDirective();
-		$this->resyncSessionIfNecessary();
+		// TODO Re-enable prolonged LoggedIn and Resync options
+		// $this->processRememberDirective();
+		// $this->resyncSessionIfNecessary();
 	}
 
 	/** Initializes the session and sets the correct configuration */
 	private function initSessionIfNecessary() {
+	/*
+		obsolete legacy
+
 		if (\session_status() === \PHP_SESSION_NONE) {
 			// use cookies to store session IDs
 			\ini_set('session.use_cookies', 1);
@@ -66,6 +85,35 @@ final class Auth extends UserManager {
 
 			// start the session (requests a cookie to be written on the client)
 			@Session::start();
+		}
+	*/
+		if ($this->request && $this->response) {//  && $this->request->session) {
+			//session
+			//$cookie_params = \session_get_cookie_params();
+			// TODO Move Set-Cookie to appropriate place
+			//$this->connection->__header['Set-Cookie'] = array($session_name . '=' . $sid
+			//    . (empty($cookie_params['domain']) ? '' : '; Domain=' . $cookie_params['domain'])
+			//    . (empty($cookie_params['lifetime']) ? '' : '; Max-Age=' . ($cookie_params['lifetime'] + \time()))
+			//    . (empty($cookie_params['path']) ? '' : '; Path=' . $cookie_params['path'])
+			//    . (empty($cookie_params['samesite']) ? '' : '; SameSite=' . $cookie_params['samesite'])
+			//    . (!$cookie_params['secure'] ? '' : '; Secure')
+			//    . (!$cookie_params['httponly'] ? '' : '; HttpOnly'));
+
+			$cookie_params = \session_get_cookie_params();
+			//$header['Set-Cookie'] = $session_name . '=' . $sid
+			// TODO Generate real sess id and store it to disk
+			$cookie = 'PHPSESSID' . '=' . 'wowsession'
+			    . (empty($cookie_params['domain']) ? '' : '; Domain=' . $cookie_params['domain'])
+			    . (empty($cookie_params['lifetime']) ? '' : '; Max-Age=' . ($cookie_params['lifetime'] + \time()))
+			    . (empty($cookie_params['path']) ? '' : '; Path=' . $cookie_params['path'])
+			    . (empty($cookie_params['samesite']) ? '' : '; SameSite=' . $cookie_params['samesite'])
+			    . (!$cookie_params['secure'] ? '' : '; Secure')
+			    . (!$cookie_params['httponly'] ? '' : '; HttpOnly');
+echo "\n--- SESS_COOKIE\n";
+var_dump($cookie);
+			$this->response = $this->response->withHeaders([ 'Set-Cookie' => $cookie ]);
+echo "\n--- MEDIAL RESPONSE HEADERS";
+var_dump($this->response->getHeaders());
 		}
 	}
 
@@ -574,7 +622,38 @@ final class Auth extends UserManager {
 			throw new DatabaseError($e->getMessage());
 		}
 
-		parent::onLoginSuccessful($userId, $email, $username, $status, $roles, $forceLogout, $remembered);
+		// TODO Do not use parent callback, cause it depends on global $_SESSION
+		// parent::onLoginSuccessful($userId, $email, $username, $status, $roles, $forceLogout, $remembered);
+
+		// re-generate the session ID to prevent session fixation attacks (requests a cookie to be written on the client)
+
+		// TODO Use PSR-7 Session
+		// Session::regenerate(true);
+/*
+ 		TODO Replace $_SESSION with PSR-7 Session
+
+		// save the user data in the session variables maintained by this library
+		$_SESSION[self::SESSION_FIELD_LOGGED_IN] = true;
+		$_SESSION[self::SESSION_FIELD_USER_ID] = (int) $userId;
+		$_SESSION[self::SESSION_FIELD_EMAIL] = $email;
+		$_SESSION[self::SESSION_FIELD_USERNAME] = $username;
+		$_SESSION[self::SESSION_FIELD_STATUS] = (int) $status;
+		$_SESSION[self::SESSION_FIELD_ROLES] = (int) $roles;
+		$_SESSION[self::SESSION_FIELD_FORCE_LOGOUT] = (int) $forceLogout;
+		$_SESSION[self::SESSION_FIELD_REMEMBERED] = $remembered;
+		$_SESSION[self::SESSION_FIELD_LAST_RESYNC] = \time();
+*/
+
+		$this->session[self::SESSION_FIELD_LOGGED_IN] = true;
+		$this->session[self::SESSION_FIELD_USER_ID] = (int) $userId;
+		$this->session[self::SESSION_FIELD_EMAIL] = $email;
+		$this->session[self::SESSION_FIELD_USERNAME] = $username;
+		$this->session[self::SESSION_FIELD_STATUS] = (int) $status;
+		$this->session[self::SESSION_FIELD_ROLES] = (int) $roles;
+		$this->session[self::SESSION_FIELD_FORCE_LOGOUT] = (int) $forceLogout;
+		$this->session[self::SESSION_FIELD_REMEMBERED] = $remembered;
+		$this->session[self::SESSION_FIELD_LAST_RESYNC] = \time();
+
 	}
 
 	/**
@@ -1475,7 +1554,10 @@ final class Auth extends UserManager {
 	 * @return boolean whether the user is logged in or not
 	 */
 	public function isLoggedIn() {
-		return isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_LOGGED_IN]) && $_SESSION[self::SESSION_FIELD_LOGGED_IN] === true;
+		// TODO Moving to PSR-7 compliant code
+		// return isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_LOGGED_IN]) && $_SESSION[self::SESSION_FIELD_LOGGED_IN] === true;
+
+		return isset($this->session) && isset($this->session[self::SESSION_FIELD_LOGGED_IN]) && $this->session[self::SESSION_FIELD_LOGGED_IN] === true;
 	}
 
 	/**
