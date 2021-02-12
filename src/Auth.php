@@ -62,7 +62,7 @@ final class Auth extends UserManager {
 		// $this->rememberCookieName = self::createRememberCookieName();
 
 		// TODO Do not interfere with PSR-7
-		$this->initSessionIfNecessary();
+		// $this->initSessionIfNecessary();
 		// $this->enhanceHttpSecurity();
 
 		// TODO Re-enable prolonged LoggedIn and Resync options
@@ -87,7 +87,7 @@ final class Auth extends UserManager {
 			@Session::start();
 		}
 	*/
-		if ($this->request && $this->response) {//  && $this->request->session) {
+	//	if ($this->request && $this->response) {//  && $this->request->session) {
 			//session
 			//$cookie_params = \session_get_cookie_params();
 			// TODO Move Set-Cookie to appropriate place
@@ -98,11 +98,12 @@ final class Auth extends UserManager {
 			//    . (empty($cookie_params['samesite']) ? '' : '; SameSite=' . $cookie_params['samesite'])
 			//    . (!$cookie_params['secure'] ? '' : '; Secure')
 			//    . (!$cookie_params['httponly'] ? '' : '; HttpOnly'));
-
+/*
 			$cookie_params = \session_get_cookie_params();
 			//$header['Set-Cookie'] = $session_name . '=' . $sid
 			// TODO Generate real sess id and store it to disk
-			$cookie = 'PHPSESSID' . '=' . 'wowsession'
+			$session_id = $this->request->sessionId();
+			$cookie = 'PHPSESSID' . '=' . $session_id
 			    . (empty($cookie_params['domain']) ? '' : '; Domain=' . $cookie_params['domain'])
 			    . (empty($cookie_params['lifetime']) ? '' : '; Max-Age=' . ($cookie_params['lifetime'] + \time()))
 			    . (empty($cookie_params['path']) ? '' : '; Path=' . $cookie_params['path'])
@@ -111,10 +112,14 @@ final class Auth extends UserManager {
 			    . (!$cookie_params['httponly'] ? '' : '; HttpOnly');
 echo "\n--- SESS_COOKIE\n";
 var_dump($cookie);
-			$this->response = $this->response->withHeaders([ 'Set-Cookie' => $cookie ]);
+			$this->response = $this->response->withAddedHeader('Set-Cookie', $cookie);
 echo "\n--- MEDIAL RESPONSE HEADERS";
 var_dump($this->response->getHeaders());
-		}
+*/
+		//	if (!$this->request->session) {
+
+		//	}
+		//}
 	}
 
 	/** Improves the application's security over HTTP(S) by setting specific headers */
@@ -445,7 +450,7 @@ var_dump($this->response->getHeaders());
 					$rememberDirectiveSelector
 				);
 			}
-
+/*
 			// remove all session variables maintained by this library
 			unset($_SESSION[self::SESSION_FIELD_LOGGED_IN]);
 			unset($_SESSION[self::SESSION_FIELD_USER_ID]);
@@ -456,6 +461,18 @@ var_dump($this->response->getHeaders());
 			unset($_SESSION[self::SESSION_FIELD_REMEMBERED]);
 			unset($_SESSION[self::SESSION_FIELD_LAST_RESYNC]);
 			unset($_SESSION[self::SESSION_FIELD_FORCE_LOGOUT]);
+*/
+			$this->session->forget([
+				self::SESSION_FIELD_LOGGED_IN,
+				self::SESSION_FIELD_USER_ID,
+				self::SESSION_FIELD_EMAIL,
+				self::SESSION_FIELD_USERNAME,
+				self::SESSION_FIELD_STATUS,
+				self::SESSION_FIELD_ROLES,
+				self::SESSION_FIELD_REMEMBERED,
+				self::SESSION_FIELD_LAST_RESYNC,
+				self::SESSION_FIELD_FORCE_LOGOUT,
+			]);
 		}
 	}
 
@@ -643,16 +660,18 @@ var_dump($this->response->getHeaders());
 		$_SESSION[self::SESSION_FIELD_REMEMBERED] = $remembered;
 		$_SESSION[self::SESSION_FIELD_LAST_RESYNC] = \time();
 */
-
-		$this->session[self::SESSION_FIELD_LOGGED_IN] = true;
-		$this->session[self::SESSION_FIELD_USER_ID] = (int) $userId;
-		$this->session[self::SESSION_FIELD_EMAIL] = $email;
-		$this->session[self::SESSION_FIELD_USERNAME] = $username;
-		$this->session[self::SESSION_FIELD_STATUS] = (int) $status;
-		$this->session[self::SESSION_FIELD_ROLES] = (int) $roles;
-		$this->session[self::SESSION_FIELD_FORCE_LOGOUT] = (int) $forceLogout;
-		$this->session[self::SESSION_FIELD_REMEMBERED] = $remembered;
-		$this->session[self::SESSION_FIELD_LAST_RESYNC] = \time();
+echo "\n-- AUTH PUT many data to SESS";
+		$this->session->put([
+			self::SESSION_FIELD_LOGGED_IN => true,
+			self::SESSION_FIELD_USER_ID => (int) $userId,
+			self::SESSION_FIELD_EMAIL => $email,
+			self::SESSION_FIELD_USERNAME => $username,
+			self::SESSION_FIELD_STATUS => (int) $status,
+			self::SESSION_FIELD_ROLES => (int) $roles,
+			self::SESSION_FIELD_FORCE_LOGOUT => (int) $forceLogout,
+			self::SESSION_FIELD_REMEMBERED => $remembered,
+			self::SESSION_FIELD_LAST_RESYNC => \time(),
+		]);
 
 	}
 
