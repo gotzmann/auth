@@ -34,7 +34,7 @@ final class Auth extends UserManager {
 	// TODO Adding PSR-7 twists
 	private $request;
 	private $response;
-	private $session = [];
+//	private $session = [];
 
 	/**
 	 * @param PdoDatabase|PdoDsn|\PDO $databaseConnection the database connection to operate on
@@ -46,11 +46,11 @@ final class Auth extends UserManager {
 	 */
 // TODO Refactoring with PSR-7 and Sessions in mind
 //	public function __construct($databaseConnection, $ipAddress = null, $dbTablePrefix = null, $throttling = null, $sessionResyncInterval = null, $dbSchema = null) {
-	public function __construct($databaseConnection, $request = null, &$response = null) {
+	public function __construct($databaseConnection, &$request = null, &$response = null) {
 //		parent::__construct($databaseConnection, $dbTablePrefix, $dbSchema);
 		parent::__construct($databaseConnection);
 
-		$this->request = $request;
+		$this->request = &$request;
 		$this->response = &$response;
 		// TODO Init session with data
 
@@ -230,6 +230,7 @@ var_dump($this->response->getHeaders());
 					}
 					// if the counter that keeps track of forced logouts has remained unchanged
 					else {
+						/*
 						// the session data needs to be updated
 						$_SESSION[self::SESSION_FIELD_EMAIL] = $authoritativeData['email'];
 						$_SESSION[self::SESSION_FIELD_USERNAME] = $authoritativeData['username'];
@@ -238,6 +239,18 @@ var_dump($this->response->getHeaders());
 
 						// remember that we've just performed the required resynchronization
 						$_SESSION[self::SESSION_FIELD_LAST_RESYNC] = \time();
+						*/
+
+						$this->request->session->put([
+							self::SESSION_FIELD_EMAIL => $authoritativeData['email'],
+							self::SESSION_FIELD_USERNAME => $authoritativeData['username'],
+							self::SESSION_FIELD_STATUS => (int) $authoritativeData['status'],
+							self::SESSION_FIELD_ROLES => (int) $authoritativeData['roles_mask'],
+
+							// remember that we've just performed the required resynchronization
+							self::SESSION_FIELD_LAST_RESYNC => \time(),
+						]);
+
 					}
 				}
 				// if no data has been found for the user
@@ -437,8 +450,10 @@ var_dump($this->response->getHeaders());
 	 * @throws AuthError if an internal problem occurred (do *not* catch)
 	 */
 	public function logOut() {
+echo "\nAUTH:LOGOUT()";
 		// if the user has been signed in
 		if ($this->isLoggedIn()) {
+echo "\nAUTH:LOGOUT():LOGGED-IN";
 			// retrieve any locally existing remember directive
 			$rememberDirectiveSelector = $this->getRememberDirectiveSelector();
 
@@ -462,7 +477,8 @@ var_dump($this->response->getHeaders());
 			unset($_SESSION[self::SESSION_FIELD_LAST_RESYNC]);
 			unset($_SESSION[self::SESSION_FIELD_FORCE_LOGOUT]);
 */
-			$this->session->forget([
+			// TODO Check request and session exists
+			$this->request->session->forget([
 				self::SESSION_FIELD_LOGGED_IN,
 				self::SESSION_FIELD_USER_ID,
 				self::SESSION_FIELD_EMAIL,
@@ -661,7 +677,7 @@ var_dump($this->response->getHeaders());
 		$_SESSION[self::SESSION_FIELD_LAST_RESYNC] = \time();
 */
 echo "\n-- AUTH PUT many data to SESS";
-		$this->session->put([
+		$this->request->session->put([
 			self::SESSION_FIELD_LOGGED_IN => true,
 			self::SESSION_FIELD_USER_ID => (int) $userId,
 			self::SESSION_FIELD_EMAIL => $email,
@@ -761,8 +777,11 @@ echo "\n-- AUTH PUT many data to SESS";
 					if ($this->isLoggedIn()) {
 						// if the user has just confirmed an email address for their own account
 						if ($this->getUserId() === $confirmationData['user_id']) {
+
 							// immediately update the email address in the current session as well
-							$_SESSION[self::SESSION_FIELD_EMAIL] = $confirmationData['new_email'];
+							// TODO
+							//$_SESSION[self::SESSION_FIELD_EMAIL] = $confirmationData['new_email'];
+							$this->request->session->set(self::SESSION_FIELD_EMAIL, $confirmationData['new_email']);
 						}
 					}
 
@@ -1180,11 +1199,11 @@ echo "\n-- AUTH PUT many data to SESS";
 					elseif ($rememberDuration === false) {
 						$rememberDuration = null;
 					}
-
+/* TODO Re-enable feature
 					if ($rememberDuration !== null) {
 						$this->createRememberDirective($userData['id'], $rememberDuration);
 					}
-
+*/
 					return;
 				}
 				else {
@@ -1575,8 +1594,12 @@ echo "\n-- AUTH PUT many data to SESS";
 	public function isLoggedIn() {
 		// TODO Moving to PSR-7 compliant code
 		// return isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_LOGGED_IN]) && $_SESSION[self::SESSION_FIELD_LOGGED_IN] === true;
-
-		return isset($this->session) && isset($this->session[self::SESSION_FIELD_LOGGED_IN]) && $this->session[self::SESSION_FIELD_LOGGED_IN] === true;
+echo "\n-- is logged in\n";
+var_dump($this->request->session->get(self::SESSION_FIELD_LOGGED_IN));
+		return
+			isset($this->request) &&
+			isset($this->request->session) &&
+			$this->request->session->get(self::SESSION_FIELD_LOGGED_IN) === true;
 	}
 
 	/**
@@ -1594,8 +1617,12 @@ echo "\n-- AUTH PUT many data to SESS";
 	 * @return int the user ID
 	 */
 	public function getUserId() {
-		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_USER_ID])) {
-			return $_SESSION[self::SESSION_FIELD_USER_ID];
+// TODO
+//		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_USER_ID])) {
+//			return $_SESSION[self::SESSION_FIELD_USER_ID];
+		if (isset($this->request) && isset($this->request->session)) {
+			return $this->request->session->get(self::SESSION_FIELD_USER_ID);
+
 		}
 		else {
 			return null;
@@ -1617,8 +1644,11 @@ echo "\n-- AUTH PUT many data to SESS";
 	 * @return string the email address
 	 */
 	public function getEmail() {
-		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_EMAIL])) {
-			return $_SESSION[self::SESSION_FIELD_EMAIL];
+// TODO
+//		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_EMAIL])) {
+//			return $_SESSION[self::SESSION_FIELD_EMAIL];
+		if (isset($this->request) && isset($this->request->session)) {
+			return $this->request->session->get(self::SESSION_FIELD_EMAIL);
 		}
 		else {
 			return null;
@@ -1631,8 +1661,11 @@ echo "\n-- AUTH PUT many data to SESS";
 	 * @return string the display name
 	 */
 	public function getUsername() {
-		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_USERNAME])) {
-			return $_SESSION[self::SESSION_FIELD_USERNAME];
+// TODO
+//		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_USERNAME])) {
+//			return $_SESSION[self::SESSION_FIELD_USERNAME];
+		if (isset($this->request) && isset($this->request->session)) {
+			return $this->request->session->get(self::SESSION_FIELD_USERNAME);
 		}
 		else {
 			return null;
@@ -1645,8 +1678,11 @@ echo "\n-- AUTH PUT many data to SESS";
 	 * @return int the status as one of the constants from the {@see Status} class
 	 */
 	public function getStatus() {
-		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_STATUS])) {
-			return $_SESSION[self::SESSION_FIELD_STATUS];
+// TODO
+//		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_STATUS])) {
+//			return $_SESSION[self::SESSION_FIELD_STATUS];
+		if (isset($this->request) && isset($this->request->session)) {
+			return $this->request->session->get(self::SESSION_FIELD_STATUS);
 		}
 		else {
 			return null;
@@ -1737,7 +1773,7 @@ echo "\n-- AUTH PUT many data to SESS";
 		if (empty($role) || !\is_numeric($role)) {
 			return false;
 		}
-
+// TODO Fix for request->session
 		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_ROLES])) {
 			$role = (int) $role;
 
@@ -1803,8 +1839,11 @@ echo "\n-- AUTH PUT many data to SESS";
 	 * @return bool whether they have been remembered
 	 */
 	public function isRemembered() {
-		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_REMEMBERED])) {
-			return $_SESSION[self::SESSION_FIELD_REMEMBERED];
+// TODO
+//		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_REMEMBERED])) {
+//			return $_SESSION[self::SESSION_FIELD_REMEMBERED];
+		if (isset($this->request) && isset($this->request->session)) {
+			return $this->request->session->get(self::SESSION_FIELD_REMEMBERED);
 		}
 		else {
 			return null;
