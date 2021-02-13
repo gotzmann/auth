@@ -13,7 +13,7 @@
 	"license": "MIT",
 	"autoload": {
 		"psr-4": {
-			"Auth\\": "src/"
+			"Comet\\": "src/"
 		}
 	}
 }

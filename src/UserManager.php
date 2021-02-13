@@ -11,7 +11,7 @@
  * Licensed under the MIT License
  */
 
-namespace Auth;
+namespace Comet;
 
 use Delight\Base64\Base64;
 // TODO Should use PSR-7 Sessions here

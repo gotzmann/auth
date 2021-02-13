@@ -6,7 +6,7 @@
  * Licensed under the MIT License (https://opensource.org/licenses/MIT)
  */
 
-namespace Auth;
+namespace Comet;
 
 /** Base class for all (checked) exceptions */
 class AuthException extends \Exception {}

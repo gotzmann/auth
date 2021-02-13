@@ -6,7 +6,7 @@
  * Licensed under the MIT License (https://opensource.org/licenses/MIT)
  */
 
-namespace Auth;
+namespace Comet;
 
 use Delight\Db\PdoDatabase;
 use Delight\Db\PdoDsn;
