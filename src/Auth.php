@@ -14,18 +14,12 @@
 namespace Auth;
 
 use Delight\Base64\Base64;
-//use Delight\Cookie\Cookie;
-//use Delight\Cookie\Session;
 use Delight\Db\PdoDatabase;
 use Delight\Db\PdoDsn;
 use Delight\Db\Throwable\Error;
 use Delight\Db\Throwable\IntegrityConstraintViolationException;
 
-/** Component that provides all features and utilities for secure authentication of individual users */
-final class Auth extends UserManager {
-
-//	const COOKIE_PREFIXES = [ Cookie::PREFIX_SECURE, Cookie::PREFIX_HOST ];
-//	const COOKIE_CONTENT_SEPARATOR = '~';
+class Auth extends UserManager {
 
 	/** @var string the user's current IP address */
 	private $ipAddress;
@@ -65,15 +59,11 @@ final class Auth extends UserManager {
 		// if the user is signed in
 		if ($this->isLoggedIn()) {
 			// the following session field may not have been initialized for sessions that had already existed before the introduction of this feature
-//			if (!isset($_SESSION[self::SESSION_FIELD_LAST_RESYNC])) {
-//				$_SESSION[self::SESSION_FIELD_LAST_RESYNC] = 0;
-//			}
 			if (!$this->session->get(self::SESSION_FIELD_LAST_RESYNC)) {
 				$this->session->set(self::SESSION_FIELD_LAST_RESYNC, 0);
 			}
 
 			// if it's time for resynchronization
-//			if (($_SESSION[self::SESSION_FIELD_LAST_RESYNC] + $this->sessionResyncInterval) <= \time()) {
 			if ((!$this->session->get(self::SESSION_FIELD_LAST_RESYNC) + $this->sessionResyncInterval) <= \time()) {
 				// fetch the authoritative data from the database again
 				try {
@@ -89,33 +79,18 @@ final class Auth extends UserManager {
 				// if the user's data has been found
 				if (!empty($authoritativeData)) {
 					// the following session field may not have been initialized for sessions that had already existed before the introduction of this feature
-//					if (!isset($_SESSION[self::SESSION_FIELD_FORCE_LOGOUT])) {
-//						$_SESSION[self::SESSION_FIELD_FORCE_LOGOUT] = 0;
-//					}
 					if (!$this->session->get(self::SESSION_FIELD_FORCE_LOGOUT)) {
 						$this->session->set(self::SESSION_FIELD_FORCE_LOGOUT, 0);
 					}
 
 					// if the counter that keeps track of forced logouts has been incremented
-					//if ($authoritativeData['force_logout'] > $_SESSION[self::SESSION_FIELD_FORCE_LOGOUT]) {
 					if ($authoritativeData['force_logout'] > $this->session->get(self::SESSION_FIELD_FORCE_LOGOUT)) {
 						// the user must be signed out
 						$this->logOut();
 					}
 					// if the counter that keeps track of forced logouts has remained unchanged
 					else {
-						/*
 						// the session data needs to be updated
-						$_SESSION[self::SESSION_FIELD_EMAIL] = $authoritativeData['email'];
-						$_SESSION[self::SESSION_FIELD_USERNAME] = $authoritativeData['username'];
-						$_SESSION[self::SESSION_FIELD_STATUS] = (int) $authoritativeData['status'];
-						$_SESSION[self::SESSION_FIELD_ROLES] = (int) $authoritativeData['roles_mask'];
-
-						// remember that we've just performed the required resynchronization
-						$_SESSION[self::SESSION_FIELD_LAST_RESYNC] = \time();
-						*/
-
-						//$this->request->session->put([
 						$this->session->put([
 							self::SESSION_FIELD_EMAIL => $authoritativeData['email'],
 							self::SESSION_FIELD_USERNAME => $authoritativeData['username'],
@@ -329,7 +304,7 @@ final class Auth extends UserManager {
 		if ($this->isLoggedIn()) {
 
 			// TODO Check request and session exists
-			$this->request->session->forget([
+			$this->session->forget([
 				self::SESSION_FIELD_LOGGED_IN,
 				self::SESSION_FIELD_USER_ID,
 				self::SESSION_FIELD_EMAIL,
@@ -423,7 +398,7 @@ final class Auth extends UserManager {
 		// TODO Use PSR-7 Session
 		// Session::regenerate(true);
 
-		$this->request->session->put([
+		$this->session->put([
 			self::SESSION_FIELD_LOGGED_IN => true,
 			self::SESSION_FIELD_USER_ID => (int) $userId,
 			self::SESSION_FIELD_EMAIL => $email,
@@ -528,7 +503,7 @@ final class Auth extends UserManager {
 							// immediately update the email address in the current session as well
 							// TODO
 							//$_SESSION[self::SESSION_FIELD_EMAIL] = $confirmationData['new_email'];
-							$this->request->session->set(self::SESSION_FIELD_EMAIL, $confirmationData['new_email']);
+							$this->session->set(self::SESSION_FIELD_EMAIL, $confirmationData['new_email']);
 						}
 					}
 
@@ -1318,14 +1293,9 @@ final class Auth extends UserManager {
 	 * @return boolean whether the user is logged in or not
 	 */
 	public function isLoggedIn() {
-		// TODO Moving to PSR-7 compliant code
-		// return isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_LOGGED_IN]) && $_SESSION[self::SESSION_FIELD_LOGGED_IN] === true;
-//echo "\n-- is logged in\n";
-//var_dump($this->request->session->get(self::SESSION_FIELD_LOGGED_IN));
 		return
-			isset($this->request) &&
-			isset($this->request->session) &&
-			$this->request->session->get(self::SESSION_FIELD_LOGGED_IN) === true;
+			isset($this->session) &&
+			$this->session->get(self::SESSION_FIELD_LOGGED_IN) === true;
 	}
 
 	/**
@@ -1343,11 +1313,8 @@ final class Auth extends UserManager {
 	 * @return int the user ID
 	 */
 	public function getUserId() {
-// TODO
-//		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_USER_ID])) {
-//			return $_SESSION[self::SESSION_FIELD_USER_ID];
-		if (isset($this->request) && isset($this->request->session)) {
-			return $this->request->session->get(self::SESSION_FIELD_USER_ID);
+		if (isset($this->session)) {
+			return $this->session->get(self::SESSION_FIELD_USER_ID);
 
 		}
 		else {
@@ -1370,11 +1337,8 @@ final class Auth extends UserManager {
 	 * @return string the email address
 	 */
 	public function getEmail() {
-// TODO
-//		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_EMAIL])) {
-//			return $_SESSION[self::SESSION_FIELD_EMAIL];
-		if (isset($this->request) && isset($this->request->session)) {
-			return $this->request->session->get(self::SESSION_FIELD_EMAIL);
+		if (isset($this->session)) {
+			return $this->session->get(self::SESSION_FIELD_EMAIL);
 		}
 		else {
 			return null;
@@ -1387,11 +1351,8 @@ final class Auth extends UserManager {
 	 * @return string the display name
 	 */
 	public function getUsername() {
-// TODO
-//		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_USERNAME])) {
-//			return $_SESSION[self::SESSION_FIELD_USERNAME];
-		if (isset($this->request) && isset($this->request->session)) {
-			return $this->request->session->get(self::SESSION_FIELD_USERNAME);
+		if (isset($this->session)) {
+			return $this->session->get(self::SESSION_FIELD_USERNAME);
 		}
 		else {
 			return null;
@@ -1404,11 +1365,8 @@ final class Auth extends UserManager {
 	 * @return int the status as one of the constants from the {@see Status} class
 	 */
 	public function getStatus() {
-// TODO
-//		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_STATUS])) {
-//			return $_SESSION[self::SESSION_FIELD_STATUS];
-		if (isset($this->request) && isset($this->request->session)) {
-			return $this->request->session->get(self::SESSION_FIELD_STATUS);
+		if (isset($this->session)) {
+			return $this->session->get(self::SESSION_FIELD_STATUS);
 		}
 		else {
 			return null;
@@ -1567,11 +1525,8 @@ final class Auth extends UserManager {
 	 * @return bool whether they have been remembered
 	 */
 	public function isRemembered() {
-// TODO
-//		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_REMEMBERED])) {
-//			return $_SESSION[self::SESSION_FIELD_REMEMBERED];
-		if (isset($this->request) && isset($this->request->session)) {
-			return $this->request->session->get(self::SESSION_FIELD_REMEMBERED);
+		if (isset($this->session)) {
+			return $this->session->get(self::SESSION_FIELD_REMEMBERED);
 		}
 		else {
 			return null;
