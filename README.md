@@ -2,6 +2,8 @@
 
 **PSR compatible authentication for PHP.**
 
+It's better to use it with [Comet](https://github.com/gotzmann/comet) PHP framework
+
 Based on [PHP-Auth](https://github.com/delight-im/PHP-Auth)
 
 Written once, to be used everywhere.
@@ -26,10 +28,10 @@ Completely framework-agnostic and database-agnostic.
 
 ## Installation
 
- 1. Include the library via Composer [[?]](https://github.com/delight-im/Knowledge/blob/master/Composer%20(PHP).md):
+ 1. Include the library via Composer
 
     ```
-    $ composer require delight-im/auth
+    $ composer require gotzmann/auth
     ```
 
  1. Include the Composer autoloader:
@@ -44,10 +46,6 @@ Completely framework-agnostic and database-agnostic.
     * [MySQL](Database/MySQL.sql)
     * [PostgreSQL](Database/PostgreSQL.sql)
     * [SQLite](Database/SQLite.sql)
-
-## Upgrading
-
-Migrating from an earlier version of this project? See our [upgrade guide](Migration.md) for help.
 
 ## Usage
 
@@ -111,26 +109,26 @@ Migrating from an earlier version of this project? See our [upgrade guide](Migra
 
 // or
 
-// $db = new \Delight\Db\PdoDsn('mysql:dbname=my-database;host=localhost;charset=utf8mb4', 'my-username', 'my-password');
+// $db = new \Auth\Db\PdoDsn('mysql:dbname=my-database;host=localhost;charset=utf8mb4', 'my-username', 'my-password');
 // or
-// $db = new \Delight\Db\PdoDsn('pgsql:dbname=my-database;host=localhost;port=5432', 'my-username', 'my-password');
+// $db = new \Auth\Db\PdoDsn('pgsql:dbname=my-database;host=localhost;port=5432', 'my-username', 'my-password');
 // or
-// $db = new \Delight\Db\PdoDsn('sqlite:../Databases/my-database.sqlite');
+// $db = new \Auth\Db\PdoDsn('sqlite:../Databases/my-database.sqlite');
 
-$auth = new \Delight\Auth\Auth($db);
+$auth = new \Auth\Auth($db, $session, $params);
 ```
 
 If you have an open `PDO` connection already, just re-use it. The database user (e.g. `my-username`) needs at least the privileges `SELECT`, `INSERT`, `UPDATE` and `DELETE` for the tables used by this library (or their parent database).
 
-If your web server is behind a proxy server and `$_SERVER['REMOTE_ADDR']` only contains the proxy’s IP address, you must pass the user’s real IP address to the constructor in the second argument, which is named `$ipAddress`. The default is the usual remote IP address received by PHP.
+You must pass the user’s real IP address to the constructor in the third argument, $params['REMOTE_ADDR'] to use throttling and rate limiting features.
 
-Should your database tables for this library need a common prefix, e.g. `my_users` instead of `users` (and likewise for the other tables), pass the prefix (e.g. `my_`) as the third parameter to the constructor, which is named `$dbTablePrefix`. This is optional and the prefix is empty by default.
+Should your database tables for this library need a common prefix, e.g. `my_users` instead of `users` (and likewise for the other tables), pass the prefix (e.g. `my_`) as DB_TABLE_PREFIX key in $params. This is optional and the prefix is empty by default.
 
-During development, you may want to disable the request limiting or throttling performed by this library. To do so, pass `false` to the constructor as the fourth argument, which is named `$throttling`. The feature is enabled by default.
+During development, you may want to disable the request limiting or throttling performed by this library. To do so, pass `false` to the constructor as the THROTTLING key of $params. The feature is enabled by default.
 
-During the lifetime of a session, some user data may be changed remotely, either by a client in another session or by an administrator. That means this information must be regularly resynchronized with its authoritative source in the database, which this library does automatically. By default, this happens every five minutes. If you want to change this interval, pass a custom interval in seconds to the constructor as the fifth argument, which is named `$sessionResyncInterval`.
+During the lifetime of a session, some user data may be changed remotely, either by a client in another session or by an administrator. That means this information must be regularly resynchronized with its authoritative source in the database, which this library does automatically. By default, this happens every five minutes. If you want to change this interval, pass a custom interval in seconds to the constructor as the $params entry which is named SESSION_RESYNK_INTERVAL.
 
-If all your database tables need a common database name, schema name, or other qualifier that must be specified explicitly, you can optionally pass that qualifier to the constructor as the sixth parameter, which is named `$dbSchema`.
+If all your database tables need a common database name, schema name, or other qualifier that must be specified explicitly, you can optionally pass that qualifier, which is named DB_SCHEMA.
 
 ### Registration (sign up)
 
@@ -142,16 +140,16 @@ try {
 
     echo 'We have signed up a new user with the ID ' . $userId;
 }
-catch (\Delight\Auth\InvalidEmailException $e) {
+catch (\Auth\Auth\InvalidEmailException $e) {
     die('Invalid email address');
 }
-catch (\Delight\Auth\InvalidPasswordException $e) {
+catch (\Auth\Auth\InvalidPasswordException $e) {
     die('Invalid password');
 }
-catch (\Delight\Auth\UserAlreadyExistsException $e) {
+catch (\Auth\Auth\UserAlreadyExistsException $e) {
     die('User already exists');
 }
-catch (\Delight\Auth\TooManyRequestsException $e) {
+catch (\Auth\Auth\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -190,16 +188,16 @@ try {
 
     echo 'User is logged in';
 }
-catch (\Delight\Auth\InvalidEmailException $e) {
+catch (\Auth\Auth\InvalidEmailException $e) {
     die('Wrong email address');
 }
-catch (\Delight\Auth\InvalidPasswordException $e) {
+catch (\Auth\Auth\InvalidPasswordException $e) {
     die('Wrong password');
 }
-catch (\Delight\Auth\EmailNotVerifiedException $e) {
+catch (\Auth\Auth\EmailNotVerifiedException $e) {
     die('Email not verified');
 }
-catch (\Delight\Auth\TooManyRequestsException $e) {
+catch (\Auth\Auth\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -216,16 +214,16 @@ try {
 
     echo 'Email address has been verified';
 }
-catch (\Delight\Auth\InvalidSelectorTokenPairException $e) {
+catch (\Auth\Auth\InvalidSelectorTokenPairException $e) {
     die('Invalid token');
 }
-catch (\Delight\Auth\TokenExpiredException $e) {
+catch (\Auth\Auth\TokenExpiredException $e) {
     die('Token expired');
 }
-catch (\Delight\Auth\UserAlreadyExistsException $e) {
+catch (\Auth\Auth\UserAlreadyExistsException $e) {
     die('Email address already exists');
 }
-catch (\Delight\Auth\TooManyRequestsException $e) {
+catch (\Auth\Auth\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -233,31 +231,6 @@ catch (\Delight\Auth\TooManyRequestsException $e) {
 If you want the user to be automatically signed in after successful confirmation, just call `confirmEmailAndSignIn` instead of `confirmEmail`. That alternative method also supports [persistent logins](#keeping-the-user-logged-in) via its optional third parameter.
 
 On success, the two methods `confirmEmail` and `confirmEmailAndSignIn` both return an array with the user’s new email address, which has just been verified, at index one. If the confirmation was for an address change instead of a simple address verification, the user’s old email address will be included in the array at index zero.
-
-### Keeping the user logged in
-
-The third parameter to the `Auth#login` and `Auth#confirmEmailAndSignIn` methods controls whether the login is persistent with a long-lived cookie. With such a persistent login, users may stay authenticated for a long time, even when the browser session has already been closed and the session cookies have expired. Typically, you’ll want to keep the user logged in for weeks or months with this feature, which is known as “remember me” or “keep me logged in”. Many users will find this more convenient, but it may be less secure if they leave their devices unattended.
-
-```php
-if ($_POST['remember'] == 1) {
-    // keep logged in for one year
-    $rememberDuration = (int) (60 * 60 * 24 * 365.25);
-}
-else {
-    // do not keep logged in after session ends
-    $rememberDuration = null;
-}
-
-// ...
-
-$auth->login($_POST['email'], $_POST['password'], $rememberDuration);
-
-// ...
-```
-
-*Without* the persistent login, which is the *default* behavior, a user will only stay logged in until they close their browser, or as long as configured via `session.cookie_lifetime` and `session.gc_maxlifetime` in PHP.
-
-Omit the third parameter or set it to `null` to disable the feature. Otherwise, you may ask the user whether they want to enable “remember me”. This is usually done with a checkbox in your user interface. Use the input from that checkbox to decide between `null` and a pre-defined duration in seconds here, e.g. `60 * 60 * 24 * 365.25` for one year.
 
 ### Password reset (“forgot password”)
 
@@ -271,16 +244,16 @@ try {
 
     echo 'Request has been generated';
 }
-catch (\Delight\Auth\InvalidEmailException $e) {
+catch (\Auth\Auth\InvalidEmailException $e) {
     die('Invalid email address');
 }
-catch (\Delight\Auth\EmailNotVerifiedException $e) {
+catch (\Auth\Auth\EmailNotVerifiedException $e) {
     die('Email not verified');
 }
-catch (\Delight\Auth\ResetDisabledException $e) {
+catch (\Auth\Auth\ResetDisabledException $e) {
     die('Password reset is disabled');
 }
-catch (\Delight\Auth\TooManyRequestsException $e) {
+catch (\Auth\Auth\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -310,16 +283,16 @@ try {
 
     echo 'Ask the user for their new password';
 }
-catch (\Delight\Auth\InvalidSelectorTokenPairException $e) {
+catch (\Auth\Auth\InvalidSelectorTokenPairException $e) {
     die('Invalid token');
 }
-catch (\Delight\Auth\TokenExpiredException $e) {
+catch (\Auth\Auth\TokenExpiredException $e) {
     die('Token expired');
 }
-catch (\Delight\Auth\ResetDisabledException $e) {
+catch (\Auth\Auth\ResetDisabledException $e) {
     die('Password reset is disabled');
 }
-catch (\Delight\Auth\TooManyRequestsException $e) {
+catch (\Auth\Auth\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -345,19 +318,19 @@ try {
 
     echo 'Password has been reset';
 }
-catch (\Delight\Auth\InvalidSelectorTokenPairException $e) {
+catch (\Auth\Auth\InvalidSelectorTokenPairException $e) {
     die('Invalid token');
 }
-catch (\Delight\Auth\TokenExpiredException $e) {
+catch (\Auth\Auth\TokenExpiredException $e) {
     die('Token expired');
 }
-catch (\Delight\Auth\ResetDisabledException $e) {
+catch (\Auth\Auth\ResetDisabledException $e) {
     die('Password reset is disabled');
 }
-catch (\Delight\Auth\InvalidPasswordException $e) {
+catch (\Auth\Auth\InvalidPasswordException $e) {
     die('Invalid password');
 }
-catch (\Delight\Auth\TooManyRequestsException $e) {
+catch (\Auth\Auth\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -376,13 +349,13 @@ try {
 
     echo 'Password has been changed';
 }
-catch (\Delight\Auth\NotLoggedInException $e) {
+catch (\Auth\Auth\NotLoggedInException $e) {
     die('Not logged in');
 }
-catch (\Delight\Auth\InvalidPasswordException $e) {
+catch (\Auth\Auth\InvalidPasswordException $e) {
     die('Invalid password(s)');
 }
-catch (\Delight\Auth\TooManyRequestsException $e) {
+catch (\Auth\Auth\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -410,19 +383,19 @@ try {
         echo 'We can\'t say if the user is who they claim to be';
     }
 }
-catch (\Delight\Auth\InvalidEmailException $e) {
+catch (\Auth\Auth\InvalidEmailException $e) {
     die('Invalid email address');
 }
-catch (\Delight\Auth\UserAlreadyExistsException $e) {
+catch (\Auth\Auth\UserAlreadyExistsException $e) {
     die('Email address already exists');
 }
-catch (\Delight\Auth\EmailNotVerifiedException $e) {
+catch (\Auth\Auth\EmailNotVerifiedException $e) {
     die('Account not verified');
 }
-catch (\Delight\Auth\NotLoggedInException $e) {
+catch (\Auth\Auth\NotLoggedInException $e) {
     die('Not logged in');
 }
-catch (\Delight\Auth\TooManyRequestsException $e) {
+catch (\Auth\Auth\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -453,10 +426,10 @@ try {
 
     echo 'The user may now respond to the confirmation request (usually by clicking a link)';
 }
-catch (\Delight\Auth\ConfirmationRequestNotFound $e) {
+catch (\Auth\Auth\ConfirmationRequestNotFound $e) {
     die('No earlier request found that could be re-sent');
 }
-catch (\Delight\Auth\TooManyRequestsException $e) {
+catch (\Auth\Auth\TooManyRequestsException $e) {
     die('There have been too many requests -- try again later');
 }
 ```
@@ -471,10 +444,10 @@ try {
 
     echo 'The user may now respond to the confirmation request (usually by clicking a link)';
 }
-catch (\Delight\Auth\ConfirmationRequestNotFound $e) {
+catch (\Auth\Auth\ConfirmationRequestNotFound $e) {
     die('No earlier request found that could be re-sent');
 }
-catch (\Delight\Auth\TooManyRequestsException $e) {
+catch (\Auth\Auth\TooManyRequestsException $e) {
     die('There have been too many requests -- try again later');
 }
 ```
@@ -499,7 +472,7 @@ $auth->logOut();
 try {
     $auth->logOutEverywhereElse();
 }
-catch (\Delight\Auth\NotLoggedInException $e) {
+catch (\Auth\Auth\NotLoggedInException $e) {
     die('Not logged in');
 }
 
@@ -508,7 +481,7 @@ catch (\Delight\Auth\NotLoggedInException $e) {
 try {
     $auth->logOutEverywhere();
 }
-catch (\Delight\Auth\NotLoggedInException $e) {
+catch (\Auth\Auth\NotLoggedInException $e) {
     die('Not logged in');
 }
 ```
@@ -622,7 +595,7 @@ Here’s how to use this library with your own tables for custom user informatio
  1. If you need the custom user information only rarely, you may just retrieve it as needed. If you need it more frequently, however, you’d probably want to have it in your session data. The following method is how you can load and access your data in a reliable way:
 
     ```php
-    function getUserInfo(\Delight\Auth\Auth $auth) {
+    function getUserInfo(\Auth\Auth\Auth $auth) {
         if (!$auth->isLoggedIn()) {
             return null;
         }
@@ -651,10 +624,10 @@ try {
         echo 'We can\'t say if the user is who they claim to be';
     }
 }
-catch (\Delight\Auth\NotLoggedInException $e) {
+catch (\Auth\Auth\NotLoggedInException $e) {
     die('The user is not signed in');
 }
-catch (\Delight\Auth\TooManyRequestsException $e) {
+catch (\Auth\Auth\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -668,19 +641,19 @@ Users may have no role at all (which they do by default), exactly one role, or a
 #### Checking roles
 
 ```php
-if ($auth->hasRole(\Delight\Auth\Role::SUPER_MODERATOR)) {
+if ($auth->hasRole(\Auth\Auth\Role::SUPER_MODERATOR)) {
     echo 'The user is a super moderator';
 }
 
 // or
 
-if ($auth->hasAnyRole(\Delight\Auth\Role::DEVELOPER, \Delight\Auth\Role::MANAGER)) {
+if ($auth->hasAnyRole(\Auth\Auth\Role::DEVELOPER, \Auth\Auth\Role::MANAGER)) {
     echo 'The user is either a developer, or a manager, or both';
 }
 
 // or
 
-if ($auth->hasAllRoles(\Delight\Auth\Role::DEVELOPER, \Delight\Auth\Role::MANAGER)) {
+if ($auth->hasAllRoles(\Auth\Auth\Role::DEVELOPER, \Auth\Auth\Role::MANAGER)) {
     echo 'The user is both a developer and a manager';
 }
 ```
@@ -696,38 +669,38 @@ $auth->getRoles();
 #### Available roles
 
 ```php
-\Delight\Auth\Role::ADMIN;
-\Delight\Auth\Role::AUTHOR;
-\Delight\Auth\Role::COLLABORATOR;
-\Delight\Auth\Role::CONSULTANT;
-\Delight\Auth\Role::CONSUMER;
-\Delight\Auth\Role::CONTRIBUTOR;
-\Delight\Auth\Role::COORDINATOR;
-\Delight\Auth\Role::CREATOR;
-\Delight\Auth\Role::DEVELOPER;
-\Delight\Auth\Role::DIRECTOR;
-\Delight\Auth\Role::EDITOR;
-\Delight\Auth\Role::EMPLOYEE;
-\Delight\Auth\Role::MAINTAINER;
-\Delight\Auth\Role::MANAGER;
-\Delight\Auth\Role::MODERATOR;
-\Delight\Auth\Role::PUBLISHER;
-\Delight\Auth\Role::REVIEWER;
-\Delight\Auth\Role::SUBSCRIBER;
-\Delight\Auth\Role::SUPER_ADMIN;
-\Delight\Auth\Role::SUPER_EDITOR;
-\Delight\Auth\Role::SUPER_MODERATOR;
-\Delight\Auth\Role::TRANSLATOR;
+\Auth\Auth\Role::ADMIN;
+\Auth\Auth\Role::AUTHOR;
+\Auth\Auth\Role::COLLABORATOR;
+\Auth\Auth\Role::CONSULTANT;
+\Auth\Auth\Role::CONSUMER;
+\Auth\Auth\Role::CONTRIBUTOR;
+\Auth\Auth\Role::COORDINATOR;
+\Auth\Auth\Role::CREATOR;
+\Auth\Auth\Role::DEVELOPER;
+\Auth\Auth\Role::DIRECTOR;
+\Auth\Auth\Role::EDITOR;
+\Auth\Auth\Role::EMPLOYEE;
+\Auth\Auth\Role::MAINTAINER;
+\Auth\Auth\Role::MANAGER;
+\Auth\Auth\Role::MODERATOR;
+\Auth\Auth\Role::PUBLISHER;
+\Auth\Auth\Role::REVIEWER;
+\Auth\Auth\Role::SUBSCRIBER;
+\Auth\Auth\Role::SUPER_ADMIN;
+\Auth\Auth\Role::SUPER_EDITOR;
+\Auth\Auth\Role::SUPER_MODERATOR;
+\Auth\Auth\Role::TRANSLATOR;
 ```
 
 You can use any of these roles and ignore those that you don’t need. The list above can also be retrieved programmatically, in one of three formats:
 
 ```php
-\Delight\Auth\Role::getMap();
+\Auth\Auth\Role::getMap();
 // or
-\Delight\Auth\Role::getNames();
+\Auth\Auth\Role::getNames();
 // or
-\Delight\Auth\Role::getValues();
+\Auth\Auth\Role::getValues();
 ```
 
 #### Permissions (or access rights, privileges or capabilities)
@@ -737,12 +710,12 @@ The permissions of each user are encoded in the way that role requirements are s
 For larger projects, it is often recommended to maintain the definition of permissions in a single place. You then don’t check for *roles* in your business logic, but you check for *individual permissions*. You could implement that concept as follows:
 
 ```php
-function canEditArticle(\Delight\Auth\Auth $auth) {
+function canEditArticle(\Auth\Auth\Auth $auth) {
     return $auth->hasAnyRole(
-        \Delight\Auth\Role::MODERATOR,
-        \Delight\Auth\Role::SUPER_MODERATOR,
-        \Delight\Auth\Role::ADMIN,
-        \Delight\Auth\Role::SUPER_ADMIN
+        \Auth\Auth\Role::MODERATOR,
+        \Auth\Auth\Role::SUPER_MODERATOR,
+        \Auth\Auth\Role::ADMIN,
+        \Auth\Auth\Role::SUPER_ADMIN
     );
 }
 
@@ -780,8 +753,8 @@ namespace My\Namespace;
 
 final class MyRole {
 
-    const CUSTOMER_SERVICE_AGENT = \Delight\Auth\Role::REVIEWER;
-    const FINANCIAL_DIRECTOR = \Delight\Auth\Role::COORDINATOR;
+    const CUSTOMER_SERVICE_AGENT = \Auth\Auth\Role::REVIEWER;
+    const FINANCIAL_DIRECTOR = \Auth\Auth\Role::COORDINATOR;
 
     private function __construct() {}
 
@@ -799,9 +772,9 @@ The example above would allow you to use
 instead of
 
 ```php
-\Delight\Auth\Role::REVIEWER;
+\Auth\Auth\Role::REVIEWER;
 // and
-\Delight\Auth\Role::COORDINATOR;
+\Auth\Auth\Role::COORDINATOR;
 ```
 
 Just remember *not* to alias a *single* included role to *multiple* roles with custom names.
@@ -823,10 +796,10 @@ try {
         echo 'We can\'t say if the user is who they claim to be';
     }
 }
-catch (\Delight\Auth\NotLoggedInException $e) {
+catch (\Auth\Auth\NotLoggedInException $e) {
     die('The user is not signed in');
 }
-catch (\Delight\Auth\TooManyRequestsException $e) {
+catch (\Auth\Auth\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -852,7 +825,7 @@ try {
 
     echo 'Do something with the resource or feature';
 }
-catch (\Delight\Auth\TooManyRequestsException $e) {
+catch (\Auth\Auth\TooManyRequestsException $e) {
     // operation cancelled
 
     \http_response_code(429);
@@ -886,13 +859,13 @@ try {
 
     echo 'We have signed up a new user with the ID ' . $userId;
 }
-catch (\Delight\Auth\InvalidEmailException $e) {
+catch (\Auth\Auth\InvalidEmailException $e) {
     die('Invalid email address');
 }
-catch (\Delight\Auth\InvalidPasswordException $e) {
+catch (\Auth\Auth\InvalidPasswordException $e) {
     die('Invalid password');
 }
-catch (\Delight\Auth\UserAlreadyExistsException $e) {
+catch (\Auth\Auth\UserAlreadyExistsException $e) {
     die('User already exists');
 }
 ```
@@ -909,7 +882,7 @@ Deleting users by their ID:
 try {
     $auth->admin()->deleteUserById($_POST['id']);
 }
-catch (\Delight\Auth\UnknownIdException $e) {
+catch (\Auth\Auth\UnknownIdException $e) {
     die('Unknown ID');
 }
 ```
@@ -920,7 +893,7 @@ Deleting users by their email address:
 try {
     $auth->admin()->deleteUserByEmail($_POST['email']);
 }
-catch (\Delight\Auth\InvalidEmailException $e) {
+catch (\Auth\Auth\InvalidEmailException $e) {
     die('Unknown email address');
 }
 ```
@@ -931,10 +904,10 @@ Deleting users by their username:
 try {
     $auth->admin()->deleteUserByUsername($_POST['username']);
 }
-catch (\Delight\Auth\UnknownUsernameException $e) {
+catch (\Auth\Auth\UnknownUsernameException $e) {
     die('Unknown username');
 }
-catch (\Delight\Auth\AmbiguousUsernameException $e) {
+catch (\Auth\Auth\AmbiguousUsernameException $e) {
     die('Ambiguous username');
 }
 ```
@@ -953,30 +926,30 @@ SELECT id, email, username, status, verified, roles_mask, registered, last_login
 
 ```php
 try {
-    $auth->admin()->addRoleForUserById($userId, \Delight\Auth\Role::ADMIN);
+    $auth->admin()->addRoleForUserById($userId, \Auth\Auth\Role::ADMIN);
 }
-catch (\Delight\Auth\UnknownIdException $e) {
+catch (\Auth\Auth\UnknownIdException $e) {
     die('Unknown user ID');
 }
 
 // or
 
 try {
-    $auth->admin()->addRoleForUserByEmail($userEmail, \Delight\Auth\Role::ADMIN);
+    $auth->admin()->addRoleForUserByEmail($userEmail, \Auth\Auth\Role::ADMIN);
 }
-catch (\Delight\Auth\InvalidEmailException $e) {
+catch (\Auth\Auth\InvalidEmailException $e) {
     die('Unknown email address');
 }
 
 // or
 
 try {
-    $auth->admin()->addRoleForUserByUsername($username, \Delight\Auth\Role::ADMIN);
+    $auth->admin()->addRoleForUserByUsername($username, \Auth\Auth\Role::ADMIN);
 }
-catch (\Delight\Auth\UnknownUsernameException $e) {
+catch (\Auth\Auth\UnknownUsernameException $e) {
     die('Unknown username');
 }
-catch (\Delight\Auth\AmbiguousUsernameException $e) {
+catch (\Auth\Auth\AmbiguousUsernameException $e) {
     die('Ambiguous username');
 }
 ```
@@ -987,30 +960,30 @@ catch (\Delight\Auth\AmbiguousUsernameException $e) {
 
 ```php
 try {
-    $auth->admin()->removeRoleForUserById($userId, \Delight\Auth\Role::ADMIN);
+    $auth->admin()->removeRoleForUserById($userId, \Auth\Auth\Role::ADMIN);
 }
-catch (\Delight\Auth\UnknownIdException $e) {
+catch (\Auth\Auth\UnknownIdException $e) {
     die('Unknown user ID');
 }
 
 // or
 
 try {
-    $auth->admin()->removeRoleForUserByEmail($userEmail, \Delight\Auth\Role::ADMIN);
+    $auth->admin()->removeRoleForUserByEmail($userEmail, \Auth\Auth\Role::ADMIN);
 }
-catch (\Delight\Auth\InvalidEmailException $e) {
+catch (\Auth\Auth\InvalidEmailException $e) {
     die('Unknown email address');
 }
 
 // or
 
 try {
-    $auth->admin()->removeRoleForUserByUsername($username, \Delight\Auth\Role::ADMIN);
+    $auth->admin()->removeRoleForUserByUsername($username, \Auth\Auth\Role::ADMIN);
 }
-catch (\Delight\Auth\UnknownUsernameException $e) {
+catch (\Auth\Auth\UnknownUsernameException $e) {
     die('Unknown username');
 }
-catch (\Delight\Auth\AmbiguousUsernameException $e) {
+catch (\Auth\Auth\AmbiguousUsernameException $e) {
     die('Ambiguous username');
 }
 ```
@@ -1021,14 +994,14 @@ catch (\Delight\Auth\AmbiguousUsernameException $e) {
 
 ```php
 try {
-    if ($auth->admin()->doesUserHaveRole($userId, \Delight\Auth\Role::ADMIN)) {
+    if ($auth->admin()->doesUserHaveRole($userId, \Auth\Auth\Role::ADMIN)) {
         echo 'The specified user is an administrator';
     }
     else {
         echo 'The specified user is not an administrator';
     }
 }
-catch (\Delight\Auth\UnknownIdException $e) {
+catch (\Auth\Auth\UnknownIdException $e) {
     die('Unknown user ID');
 }
 ```
@@ -1045,10 +1018,10 @@ $auth->admin()->getRolesForUserById($userId);
 try {
     $auth->admin()->logInAsUserById($_POST['id']);
 }
-catch (\Delight\Auth\UnknownIdException $e) {
+catch (\Auth\Auth\UnknownIdException $e) {
     die('Unknown ID');
 }
-catch (\Delight\Auth\EmailNotVerifiedException $e) {
+catch (\Auth\Auth\EmailNotVerifiedException $e) {
     die('Email address not verified');
 }
 
@@ -1057,10 +1030,10 @@ catch (\Delight\Auth\EmailNotVerifiedException $e) {
 try {
     $auth->admin()->logInAsUserByEmail($_POST['email']);
 }
-catch (\Delight\Auth\InvalidEmailException $e) {
+catch (\Auth\Auth\InvalidEmailException $e) {
     die('Unknown email address');
 }
-catch (\Delight\Auth\EmailNotVerifiedException $e) {
+catch (\Auth\Auth\EmailNotVerifiedException $e) {
     die('Email address not verified');
 }
 
@@ -1069,13 +1042,13 @@ catch (\Delight\Auth\EmailNotVerifiedException $e) {
 try {
     $auth->admin()->logInAsUserByUsername($_POST['username']);
 }
-catch (\Delight\Auth\UnknownUsernameException $e) {
+catch (\Auth\Auth\UnknownUsernameException $e) {
     die('Unknown username');
 }
-catch (\Delight\Auth\AmbiguousUsernameException $e) {
+catch (\Auth\Auth\AmbiguousUsernameException $e) {
     die('Ambiguous username');
 }
-catch (\Delight\Auth\EmailNotVerifiedException $e) {
+catch (\Auth\Auth\EmailNotVerifiedException $e) {
     die('Email address not verified');
 }
 ```
@@ -1086,10 +1059,10 @@ catch (\Delight\Auth\EmailNotVerifiedException $e) {
 try {
     $auth->admin()->changePasswordForUserById($_POST['id'], $_POST['newPassword']);
 }
-catch (\Delight\Auth\UnknownIdException $e) {
+catch (\Auth\Auth\UnknownIdException $e) {
     die('Unknown ID');
 }
-catch (\Delight\Auth\InvalidPasswordException $e) {
+catch (\Auth\Auth\InvalidPasswordException $e) {
     die('Invalid password');
 }
 
@@ -1098,13 +1071,13 @@ catch (\Delight\Auth\InvalidPasswordException $e) {
 try {
     $auth->admin()->changePasswordForUserByUsername($_POST['username'], $_POST['newPassword']);
 }
-catch (\Delight\Auth\UnknownUsernameException $e) {
+catch (\Auth\Auth\UnknownUsernameException $e) {
     die('Unknown username');
 }
-catch (\Delight\Auth\AmbiguousUsernameException $e) {
+catch (\Auth\Auth\AmbiguousUsernameException $e) {
     die('Ambiguous username');
 }
-catch (\Delight\Auth\InvalidPasswordException $e) {
+catch (\Auth\Auth\InvalidPasswordException $e) {
     die('Invalid password');
 }
 ```
@@ -1120,7 +1093,7 @@ This library uses two cookies to keep state on the client: The first, whose name
 is the general (mandatory) session cookie. The second (optional) cookie is only used for [persistent logins](#keeping-the-user-logged-in) and its name can be retrieved as follows:
 
 ```php
-\Delight\Auth\Auth::createRememberCookieName();
+\Auth\Auth\Auth::createRememberCookieName();
 ```
 
 #### Renaming the library’s cookies
@@ -1247,13 +1220,13 @@ You can change the attribute through one of the following means, in order of rec
 
 ```php
 $length = 24;
-$randomStr = \Delight\Auth\Auth::createRandomString($length);
+$randomStr = \Auth\Auth\Auth::createRandomString($length);
 ```
 
 #### Creating a UUID v4 as per RFC 4122
 
 ```php
-$uuid = \Delight\Auth\Auth::createUuid();
+$uuid = \Auth\Auth\Auth::createUuid();
 ```
 
 ### Reading and writing session data
