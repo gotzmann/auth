@@ -33,7 +33,7 @@ $db = new \PDO('mysql:dbname=php_auth;host=127.0.0.1;charset=utf8mb4', 'root', '
 // or
 // $db = new \PDO('sqlite:../Databases/php_auth.sqlite');
 
-$auth = new \Auth\Auth($db);
+$auth = new \Comet\Auth($db);
 
 $result = \processRequestData($auth);
 
@@ -47,7 +47,7 @@ else {
 	\showGuestUserForm();
 }
 
-function processRequestData(\Auth\Auth $auth) {
+function processRequestData(\Comet\Auth $auth) {
 	if (isset($_POST)) {
 		if (isset($_POST['action'])) {
 			if ($_POST['action'] === 'login') {
@@ -691,7 +691,7 @@ function processRequestData(\Auth\Auth $auth) {
 	return null;
 }
 
-function showDebugData(\Auth\Auth $auth, $result) {
+function showDebugData(\Comet\Auth $auth, $result) {
 	echo '<pre>';
 
 	echo 'Last operation' . "\t\t\t\t";
@@ -747,20 +747,20 @@ function showDebugData(\Auth\Auth $auth, $result) {
 	echo 'Session name' . "\t\t\t\t";
 	\var_dump(\session_name());
 	echo 'Auth::createRememberCookieName()' . "\t";
-	\var_dump(\Auth\Auth::createRememberCookieName());
+	\var_dump(\Comet\Auth::createRememberCookieName());
 	echo "\n";
 
 	echo 'Auth::createCookieName(\'session\')' . "\t";
-	\var_dump(\Auth\Auth::createCookieName('session'));
+	\var_dump(\Comet\Auth::createCookieName('session'));
 	echo 'Auth::createRandomString()' . "\t\t";
-	\var_dump(\Auth\Auth::createRandomString());
+	\var_dump(\Comet\Auth::createRandomString());
 	echo 'Auth::createUuid()' . "\t\t\t";
-	\var_dump(\Auth\Auth::createUuid());
+	\var_dump(\Comet\Auth::createUuid());
 
 	echo '</pre>';
 }
 
-function convertStatusToText(\Auth\Auth $auth) {
+function convertStatusToText(\Comet\Auth $auth) {
 	if ($auth->isLoggedIn() === true) {
 		if ($auth->getStatus() === \Auth\Status::NORMAL && $auth->isNormal()) {
 			return 'normal';
@@ -796,7 +796,7 @@ function showGeneralForm() {
 	echo '</form>';
 }
 
-function showAuthenticatedUserForm(\Auth\Auth $auth) {
+function showAuthenticatedUserForm(\Comet\Auth $auth) {
 	echo '<form action="" method="post" accept-charset="utf-8">';
 	echo '<input type="hidden" name="action" value="reconfirmPassword" />';
 	echo '<input type="text" name="password" placeholder="Password" /> ';
