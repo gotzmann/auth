@@ -128,16 +128,16 @@ try {
 
     echo 'We have signed up a new user with the ID ' . $userId;
 }
-catch (\Comet\Auth\InvalidEmailException $e) {
+catch (\Comet\InvalidEmailException $e) {
     die('Invalid email address');
 }
-catch (\Comet\Auth\InvalidPasswordException $e) {
+catch (\Comet\InvalidPasswordException $e) {
     die('Invalid password');
 }
-catch (\Comet\Auth\UserAlreadyExistsException $e) {
+catch (\Comet\UserAlreadyExistsException $e) {
     die('User already exists');
 }
-catch (\Comet\Auth\TooManyRequestsException $e) {
+catch (\Comet\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -176,16 +176,16 @@ try {
 
     echo 'User is logged in';
 }
-catch (\Comet\Auth\InvalidEmailException $e) {
+catch (\Comet\InvalidEmailException $e) {
     die('Wrong email address');
 }
-catch (\Comet\Auth\InvalidPasswordException $e) {
+catch (\Comet\InvalidPasswordException $e) {
     die('Wrong password');
 }
-catch (\Comet\Auth\EmailNotVerifiedException $e) {
+catch (\Comet\EmailNotVerifiedException $e) {
     die('Email not verified');
 }
-catch (\Comet\Auth\TooManyRequestsException $e) {
+catch (\Comet\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -202,16 +202,16 @@ try {
 
     echo 'Email address has been verified';
 }
-catch (\Comet\Auth\InvalidSelectorTokenPairException $e) {
+catch (\Comet\InvalidSelectorTokenPairException $e) {
     die('Invalid token');
 }
-catch (\Comet\Auth\TokenExpiredException $e) {
+catch (\Comet\TokenExpiredException $e) {
     die('Token expired');
 }
-catch (\Comet\Auth\UserAlreadyExistsException $e) {
+catch (\Comet\UserAlreadyExistsException $e) {
     die('Email address already exists');
 }
-catch (\Comet\Auth\TooManyRequestsException $e) {
+catch (\Comet\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -232,16 +232,16 @@ try {
 
     echo 'Request has been generated';
 }
-catch (\Comet\Auth\InvalidEmailException $e) {
+catch (\Comet\InvalidEmailException $e) {
     die('Invalid email address');
 }
-catch (\Comet\Auth\EmailNotVerifiedException $e) {
+catch (\Comet\EmailNotVerifiedException $e) {
     die('Email not verified');
 }
-catch (\Comet\Auth\ResetDisabledException $e) {
+catch (\Comet\ResetDisabledException $e) {
     die('Password reset is disabled');
 }
-catch (\Comet\Auth\TooManyRequestsException $e) {
+catch (\Comet\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -271,16 +271,16 @@ try {
 
     echo 'Ask the user for their new password';
 }
-catch (\Comet\Auth\InvalidSelectorTokenPairException $e) {
+catch (\Comet\InvalidSelectorTokenPairException $e) {
     die('Invalid token');
 }
-catch (\Comet\Auth\TokenExpiredException $e) {
+catch (\Comet\TokenExpiredException $e) {
     die('Token expired');
 }
-catch (\Comet\Auth\ResetDisabledException $e) {
+catch (\Comet\ResetDisabledException $e) {
     die('Password reset is disabled');
 }
-catch (\Comet\Auth\TooManyRequestsException $e) {
+catch (\Comet\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -306,19 +306,19 @@ try {
 
     echo 'Password has been reset';
 }
-catch (\Comet\Auth\InvalidSelectorTokenPairException $e) {
+catch (\Comet\InvalidSelectorTokenPairException $e) {
     die('Invalid token');
 }
-catch (\Comet\Auth\TokenExpiredException $e) {
+catch (\Comet\TokenExpiredException $e) {
     die('Token expired');
 }
-catch (\Comet\Auth\ResetDisabledException $e) {
+catch (\Comet\ResetDisabledException $e) {
     die('Password reset is disabled');
 }
-catch (\Comet\Auth\InvalidPasswordException $e) {
+catch (\Comet\InvalidPasswordException $e) {
     die('Invalid password');
 }
-catch (\Comet\Auth\TooManyRequestsException $e) {
+catch (\Comet\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -337,13 +337,13 @@ try {
 
     echo 'Password has been changed';
 }
-catch (\Comet\Auth\NotLoggedInException $e) {
+catch (\Comet\NotLoggedInException $e) {
     die('Not logged in');
 }
-catch (\Comet\Auth\InvalidPasswordException $e) {
+catch (\Comet\InvalidPasswordException $e) {
     die('Invalid password(s)');
 }
-catch (\Comet\Auth\TooManyRequestsException $e) {
+catch (\Comet\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -371,19 +371,19 @@ try {
         echo 'We can\'t say if the user is who they claim to be';
     }
 }
-catch (\Comet\Auth\InvalidEmailException $e) {
+catch (\Comet\InvalidEmailException $e) {
     die('Invalid email address');
 }
-catch (\Comet\Auth\UserAlreadyExistsException $e) {
+catch (\Comet\UserAlreadyExistsException $e) {
     die('Email address already exists');
 }
-catch (\Comet\Auth\EmailNotVerifiedException $e) {
+catch (\Comet\EmailNotVerifiedException $e) {
     die('Account not verified');
 }
-catch (\Comet\Auth\NotLoggedInException $e) {
+catch (\Comet\NotLoggedInException $e) {
     die('Not logged in');
 }
-catch (\Comet\Auth\TooManyRequestsException $e) {
+catch (\Comet\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -414,10 +414,10 @@ try {
 
     echo 'The user may now respond to the confirmation request (usually by clicking a link)';
 }
-catch (\Comet\Auth\ConfirmationRequestNotFound $e) {
+catch (\Comet\ConfirmationRequestNotFound $e) {
     die('No earlier request found that could be re-sent');
 }
-catch (\Comet\Auth\TooManyRequestsException $e) {
+catch (\Comet\TooManyRequestsException $e) {
     die('There have been too many requests -- try again later');
 }
 ```
@@ -432,10 +432,10 @@ try {
 
     echo 'The user may now respond to the confirmation request (usually by clicking a link)';
 }
-catch (\Comet\Auth\ConfirmationRequestNotFound $e) {
+catch (\Comet\ConfirmationRequestNotFound $e) {
     die('No earlier request found that could be re-sent');
 }
-catch (\Comet\Auth\TooManyRequestsException $e) {
+catch (\Comet\TooManyRequestsException $e) {
     die('There have been too many requests -- try again later');
 }
 ```
@@ -460,7 +460,7 @@ $auth->logOut();
 try {
     $auth->logOutEverywhereElse();
 }
-catch (\Comet\Auth\NotLoggedInException $e) {
+catch (\Comet\NotLoggedInException $e) {
     die('Not logged in');
 }
 
@@ -469,7 +469,7 @@ catch (\Comet\Auth\NotLoggedInException $e) {
 try {
     $auth->logOutEverywhere();
 }
-catch (\Comet\Auth\NotLoggedInException $e) {
+catch (\Comet\NotLoggedInException $e) {
     die('Not logged in');
 }
 ```
@@ -583,7 +583,7 @@ Here’s how to use this library with your own tables for custom user informatio
  1. If you need the custom user information only rarely, you may just retrieve it as needed. If you need it more frequently, however, you’d probably want to have it in your session data. The following method is how you can load and access your data in a reliable way:
 
     ```php
-    function getUserInfo(\Comet\Auth\Auth $auth) {
+    function getUserInfo(\Comet\Auth $auth) {
         if (!$auth->isLoggedIn()) {
             return null;
         }
@@ -612,10 +612,10 @@ try {
         echo 'We can\'t say if the user is who they claim to be';
     }
 }
-catch (\Comet\Auth\NotLoggedInException $e) {
+catch (\Comet\NotLoggedInException $e) {
     die('The user is not signed in');
 }
-catch (\Comet\Auth\TooManyRequestsException $e) {
+catch (\Comet\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -629,19 +629,19 @@ Users may have no role at all (which they do by default), exactly one role, or a
 #### Checking roles
 
 ```php
-if ($auth->hasRole(\Comet\Auth\Role::SUPER_MODERATOR)) {
+if ($auth->hasRole(\Comet\Role::SUPER_MODERATOR)) {
     echo 'The user is a super moderator';
 }
 
 // or
 
-if ($auth->hasAnyRole(\Comet\Auth\Role::DEVELOPER, \Comet\Auth\Role::MANAGER)) {
+if ($auth->hasAnyRole(\Comet\Role::DEVELOPER, \Comet\Auth\Role::MANAGER)) {
     echo 'The user is either a developer, or a manager, or both';
 }
 
 // or
 
-if ($auth->hasAllRoles(\Comet\Auth\Role::DEVELOPER, \Comet\Auth\Role::MANAGER)) {
+if ($auth->hasAllRoles(\Comet\Role::DEVELOPER, \Comet\Auth\Role::MANAGER)) {
     echo 'The user is both a developer and a manager';
 }
 ```
@@ -657,38 +657,38 @@ $auth->getRoles();
 #### Available roles
 
 ```php
-\Comet\Auth\Role::ADMIN;
-\Comet\Auth\Role::AUTHOR;
-\Comet\Auth\Role::COLLABORATOR;
-\Comet\Auth\Role::CONSULTANT;
-\Comet\Auth\Role::CONSUMER;
-\Comet\Auth\Role::CONTRIBUTOR;
-\Comet\Auth\Role::COORDINATOR;
-\Comet\Auth\Role::CREATOR;
-\Comet\Auth\Role::DEVELOPER;
-\Comet\Auth\Role::DIRECTOR;
-\Comet\Auth\Role::EDITOR;
-\Comet\Auth\Role::EMPLOYEE;
-\Comet\Auth\Role::MAINTAINER;
-\Comet\Auth\Role::MANAGER;
-\Comet\Auth\Role::MODERATOR;
-\Comet\Auth\Role::PUBLISHER;
-\Comet\Auth\Role::REVIEWER;
-\Comet\Auth\Role::SUBSCRIBER;
-\Comet\Auth\Role::SUPER_ADMIN;
-\Comet\Auth\Role::SUPER_EDITOR;
-\Comet\Auth\Role::SUPER_MODERATOR;
-\Comet\Auth\Role::TRANSLATOR;
+\Comet\Role::ADMIN;
+\Comet\Role::AUTHOR;
+\Comet\Role::COLLABORATOR;
+\Comet\Role::CONSULTANT;
+\Comet\Role::CONSUMER;
+\Comet\Role::CONTRIBUTOR;
+\Comet\Role::COORDINATOR;
+\Comet\Role::CREATOR;
+\Comet\Role::DEVELOPER;
+\Comet\Role::DIRECTOR;
+\Comet\Role::EDITOR;
+\Comet\Role::EMPLOYEE;
+\Comet\Role::MAINTAINER;
+\Comet\Role::MANAGER;
+\Comet\Role::MODERATOR;
+\Comet\Role::PUBLISHER;
+\Comet\Role::REVIEWER;
+\Comet\Role::SUBSCRIBER;
+\Comet\Role::SUPER_ADMIN;
+\Comet\Role::SUPER_EDITOR;
+\Comet\Role::SUPER_MODERATOR;
+\Comet\Role::TRANSLATOR;
 ```
 
 You can use any of these roles and ignore those that you don’t need. The list above can also be retrieved programmatically, in one of three formats:
 
 ```php
-\Comet\Auth\Role::getMap();
+\Comet\Role::getMap();
 // or
-\Comet\Auth\Role::getNames();
+\Comet\Role::getNames();
 // or
-\Comet\Auth\Role::getValues();
+\Comet\Role::getValues();
 ```
 
 #### Permissions (or access rights, privileges or capabilities)
@@ -700,10 +700,10 @@ For larger projects, it is often recommended to maintain the definition of permi
 ```php
 function canEditArticle(\Comet\Auth\Auth $auth) {
     return $auth->hasAnyRole(
-        \Comet\Auth\Role::MODERATOR,
-        \Comet\Auth\Role::SUPER_MODERATOR,
-        \Comet\Auth\Role::ADMIN,
-        \Comet\Auth\Role::SUPER_ADMIN
+        \Comet\Role::MODERATOR,
+        \Comet\Role::SUPER_MODERATOR,
+        \Comet\Role::ADMIN,
+        \Comet\Role::SUPER_ADMIN
     );
 }
 
@@ -741,8 +741,8 @@ namespace My\Namespace;
 
 final class MyRole {
 
-    const CUSTOMER_SERVICE_AGENT = \Comet\Auth\Role::REVIEWER;
-    const FINANCIAL_DIRECTOR = \Comet\Auth\Role::COORDINATOR;
+    const CUSTOMER_SERVICE_AGENT = \Comet\Role::REVIEWER;
+    const FINANCIAL_DIRECTOR = \Comet\Role::COORDINATOR;
 
     private function __construct() {}
 
@@ -760,9 +760,9 @@ The example above would allow you to use
 instead of
 
 ```php
-\Comet\Auth\Role::REVIEWER;
+\Comet\Role::REVIEWER;
 // and
-\Comet\Auth\Role::COORDINATOR;
+\Comet\Role::COORDINATOR;
 ```
 
 Just remember *not* to alias a *single* included role to *multiple* roles with custom names.
@@ -784,10 +784,10 @@ try {
         echo 'We can\'t say if the user is who they claim to be';
     }
 }
-catch (\Comet\Auth\NotLoggedInException $e) {
+catch (\Comet\NotLoggedInException $e) {
     die('The user is not signed in');
 }
-catch (\Comet\Auth\TooManyRequestsException $e) {
+catch (\Comet\TooManyRequestsException $e) {
     die('Too many requests');
 }
 ```
@@ -813,7 +813,7 @@ try {
 
     echo 'Do something with the resource or feature';
 }
-catch (\Comet\Auth\TooManyRequestsException $e) {
+catch (\Comet\TooManyRequestsException $e) {
     // operation cancelled
 
     \http_response_code(429);
@@ -847,13 +847,13 @@ try {
 
     echo 'We have signed up a new user with the ID ' . $userId;
 }
-catch (\Comet\Auth\InvalidEmailException $e) {
+catch (\Comet\InvalidEmailException $e) {
     die('Invalid email address');
 }
-catch (\Comet\Auth\InvalidPasswordException $e) {
+catch (\Comet\InvalidPasswordException $e) {
     die('Invalid password');
 }
-catch (\Comet\Auth\UserAlreadyExistsException $e) {
+catch (\Comet\UserAlreadyExistsException $e) {
     die('User already exists');
 }
 ```
@@ -870,7 +870,7 @@ Deleting users by their ID:
 try {
     $auth->admin()->deleteUserById($_POST['id']);
 }
-catch (\Comet\Auth\UnknownIdException $e) {
+catch (\Comet\UnknownIdException $e) {
     die('Unknown ID');
 }
 ```
@@ -881,7 +881,7 @@ Deleting users by their email address:
 try {
     $auth->admin()->deleteUserByEmail($_POST['email']);
 }
-catch (\Comet\Auth\InvalidEmailException $e) {
+catch (\Comet\InvalidEmailException $e) {
     die('Unknown email address');
 }
 ```
@@ -892,10 +892,10 @@ Deleting users by their username:
 try {
     $auth->admin()->deleteUserByUsername($_POST['username']);
 }
-catch (\Comet\Auth\UnknownUsernameException $e) {
+catch (\Comet\UnknownUsernameException $e) {
     die('Unknown username');
 }
-catch (\Comet\Auth\AmbiguousUsernameException $e) {
+catch (\Comet\AmbiguousUsernameException $e) {
     die('Ambiguous username');
 }
 ```
@@ -916,7 +916,7 @@ SELECT id, email, username, status, verified, roles_mask, registered, last_login
 try {
     $auth->admin()->addRoleForUserById($userId, \Comet\Auth\Role::ADMIN);
 }
-catch (\Comet\Auth\UnknownIdException $e) {
+catch (\Comet\UnknownIdException $e) {
     die('Unknown user ID');
 }
 
@@ -925,7 +925,7 @@ catch (\Comet\Auth\UnknownIdException $e) {
 try {
     $auth->admin()->addRoleForUserByEmail($userEmail, \Comet\Auth\Role::ADMIN);
 }
-catch (\Comet\Auth\InvalidEmailException $e) {
+catch (\Comet\InvalidEmailException $e) {
     die('Unknown email address');
 }
 
@@ -934,10 +934,10 @@ catch (\Comet\Auth\InvalidEmailException $e) {
 try {
     $auth->admin()->addRoleForUserByUsername($username, \Comet\Auth\Role::ADMIN);
 }
-catch (\Comet\Auth\UnknownUsernameException $e) {
+catch (\Comet\UnknownUsernameException $e) {
     die('Unknown username');
 }
-catch (\Comet\Auth\AmbiguousUsernameException $e) {
+catch (\Comet\AmbiguousUsernameException $e) {
     die('Ambiguous username');
 }
 ```
@@ -950,7 +950,7 @@ catch (\Comet\Auth\AmbiguousUsernameException $e) {
 try {
     $auth->admin()->removeRoleForUserById($userId, \Comet\Auth\Role::ADMIN);
 }
-catch (\Comet\Auth\UnknownIdException $e) {
+catch (\Comet\UnknownIdException $e) {
     die('Unknown user ID');
 }
 
@@ -959,7 +959,7 @@ catch (\Comet\Auth\UnknownIdException $e) {
 try {
     $auth->admin()->removeRoleForUserByEmail($userEmail, \Comet\Auth\Role::ADMIN);
 }
-catch (\Comet\Auth\InvalidEmailException $e) {
+catch (\Comet\InvalidEmailException $e) {
     die('Unknown email address');
 }
 
@@ -968,10 +968,10 @@ catch (\Comet\Auth\InvalidEmailException $e) {
 try {
     $auth->admin()->removeRoleForUserByUsername($username, \Comet\Auth\Role::ADMIN);
 }
-catch (\Comet\Auth\UnknownUsernameException $e) {
+catch (\Comet\UnknownUsernameException $e) {
     die('Unknown username');
 }
-catch (\Comet\Auth\AmbiguousUsernameException $e) {
+catch (\Comet\AmbiguousUsernameException $e) {
     die('Ambiguous username');
 }
 ```
@@ -982,14 +982,14 @@ catch (\Comet\Auth\AmbiguousUsernameException $e) {
 
 ```php
 try {
-    if ($auth->admin()->doesUserHaveRole($userId, \Comet\Auth\Role::ADMIN)) {
+    if ($auth->admin()->doesUserHaveRole($userId, \Comet\Role::ADMIN)) {
         echo 'The specified user is an administrator';
     }
     else {
         echo 'The specified user is not an administrator';
     }
 }
-catch (\Comet\Auth\UnknownIdException $e) {
+catch (\Comet\UnknownIdException $e) {
     die('Unknown user ID');
 }
 ```
@@ -1006,10 +1006,10 @@ $auth->admin()->getRolesForUserById($userId);
 try {
     $auth->admin()->logInAsUserById($_POST['id']);
 }
-catch (\Comet\Auth\UnknownIdException $e) {
+catch (\Comet\UnknownIdException $e) {
     die('Unknown ID');
 }
-catch (\Comet\Auth\EmailNotVerifiedException $e) {
+catch (\Comet\EmailNotVerifiedException $e) {
     die('Email address not verified');
 }
 
@@ -1018,10 +1018,10 @@ catch (\Comet\Auth\EmailNotVerifiedException $e) {
 try {
     $auth->admin()->logInAsUserByEmail($_POST['email']);
 }
-catch (\Comet\Auth\InvalidEmailException $e) {
+catch (\Comet\InvalidEmailException $e) {
     die('Unknown email address');
 }
-catch (\Comet\Auth\EmailNotVerifiedException $e) {
+catch (\Comet\EmailNotVerifiedException $e) {
     die('Email address not verified');
 }
 
@@ -1030,13 +1030,13 @@ catch (\Comet\Auth\EmailNotVerifiedException $e) {
 try {
     $auth->admin()->logInAsUserByUsername($_POST['username']);
 }
-catch (\Comet\Auth\UnknownUsernameException $e) {
+catch (\Comet\UnknownUsernameException $e) {
     die('Unknown username');
 }
-catch (\Comet\Auth\AmbiguousUsernameException $e) {
+catch (\Comet\AmbiguousUsernameException $e) {
     die('Ambiguous username');
 }
-catch (\Comet\Auth\EmailNotVerifiedException $e) {
+catch (\Comet\EmailNotVerifiedException $e) {
     die('Email address not verified');
 }
 ```
@@ -1047,10 +1047,10 @@ catch (\Comet\Auth\EmailNotVerifiedException $e) {
 try {
     $auth->admin()->changePasswordForUserById($_POST['id'], $_POST['newPassword']);
 }
-catch (\Comet\Auth\UnknownIdException $e) {
+catch (\Comet\UnknownIdException $e) {
     die('Unknown ID');
 }
-catch (\Comet\Auth\InvalidPasswordException $e) {
+catch (\Comet\InvalidPasswordException $e) {
     die('Invalid password');
 }
 
@@ -1059,13 +1059,13 @@ catch (\Comet\Auth\InvalidPasswordException $e) {
 try {
     $auth->admin()->changePasswordForUserByUsername($_POST['username'], $_POST['newPassword']);
 }
-catch (\Comet\Auth\UnknownUsernameException $e) {
+catch (\Comet\UnknownUsernameException $e) {
     die('Unknown username');
 }
-catch (\Comet\Auth\AmbiguousUsernameException $e) {
+catch (\Comet\AmbiguousUsernameException $e) {
     die('Ambiguous username');
 }
-catch (\Comet\Auth\InvalidPasswordException $e) {
+catch (\Comet\InvalidPasswordException $e) {
     die('Invalid password');
 }
 ```
@@ -1081,7 +1081,7 @@ This library uses two cookies to keep state on the client: The first, whose name
 is the general (mandatory) session cookie. The second (optional) cookie is only used for [persistent logins](#keeping-the-user-logged-in) and its name can be retrieved as follows:
 
 ```php
-\Comet\Auth\Auth::createRememberCookieName();
+\Comet\Auth::createRememberCookieName();
 ```
 
 #### Renaming the library’s cookies
@@ -1208,13 +1208,13 @@ You can change the attribute through one of the following means, in order of rec
 
 ```php
 $length = 24;
-$randomStr = \Comet\Auth\Auth::createRandomString($length);
+$randomStr = \Comet\Auth::createRandomString($length);
 ```
 
 #### Creating a UUID v4 as per RFC 4122
 
 ```php
-$uuid = \Comet\Auth\Auth::createUuid();
+$uuid = \Comet\Auth::createUuid();
 ```
 
 ### Reading and writing session data
