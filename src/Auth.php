@@ -338,7 +338,6 @@ class Auth extends UserManager {
 		}
 
 		// ensure that we will simply skip or ignore the next forced logout (which we have just caused) in the current session
-		//$_SESSION[self::SESSION_FIELD_FORCE_LOGOUT]++;
 		$this->session->set(self::SESSION_FIELD_FORCE_LOGOUT, $this->session->get(self::SESSION_FIELD_FORCE_LOGOUT) + 1);
 
 		// re-generate the session ID to prevent session fixation attacks (requests a cookie to be written on the client)
@@ -369,7 +368,6 @@ class Auth extends UserManager {
 	 */
 	public function destroySession() {
 		// remove all session variables without exception
-//		$_SESSION = [];
 		$this->session->flush();
 		// delete the session cookie
 //		$this->deleteSessionCookie();
@@ -476,8 +474,6 @@ class Auth extends UserManager {
 						if ($this->getUserId() === $confirmationData['user_id']) {
 
 							// immediately update the email address in the current session as well
-							// TODO
-							//$_SESSION[self::SESSION_FIELD_EMAIL] = $confirmationData['new_email'];
 							$this->session->set(self::SESSION_FIELD_EMAIL, $confirmationData['new_email']);
 						}
 					}
@@ -1432,12 +1428,9 @@ class Auth extends UserManager {
 		if (empty($role) || !\is_numeric($role)) {
 			return false;
 		}
-// TODO Fix for request->session
-//		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_ROLES])) {
 		if (isset($this->session) && $this->session->get(self::SESSION_FIELD_ROLES)) {
 			$role = (int) $role;
 
-			//return (((int) $_SESSION[self::SESSION_FIELD_ROLES]) & $role) === $role;
 			return (((int) $this->session->get(self::SESSION_FIELD_ROLES) & $role)) === $role;
 		}
 		else {
