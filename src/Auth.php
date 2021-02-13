@@ -1,16 +1,21 @@
 <?php
 
 /*
- * PHP-Auth (https://github.com/delight-im/PHP-Auth)
- * Copyright (c) delight.im (https://www.delight.im/)
- * Licensed under the MIT License (https://opensource.org/licenses/MIT)
+ * Auth
+ *
+ * PSR compatible auth library
+ * https://github.com/gotzmann/auth
+ *
+ * Copyright (c) Serge Gotsuliak
+ * Copyright (c) delight.im
+ * Licensed under the MIT License
  */
 
 namespace Auth;
 
 use Delight\Base64\Base64;
-use Delight\Cookie\Cookie;
-use Delight\Cookie\Session;
+//use Delight\Cookie\Cookie;
+//use Delight\Cookie\Session;
 use Delight\Db\PdoDatabase;
 use Delight\Db\PdoDsn;
 use Delight\Db\Throwable\Error;
@@ -19,8 +24,8 @@ use Delight\Db\Throwable\IntegrityConstraintViolationException;
 /** Component that provides all features and utilities for secure authentication of individual users */
 final class Auth extends UserManager {
 
-	const COOKIE_PREFIXES = [ Cookie::PREFIX_SECURE, Cookie::PREFIX_HOST ];
-	const COOKIE_CONTENT_SEPARATOR = '~';
+//	const COOKIE_PREFIXES = [ Cookie::PREFIX_SECURE, Cookie::PREFIX_HOST ];
+//	const COOKIE_CONTENT_SEPARATOR = '~';
 
 	/** @var string the user's current IP address */
 	private $ipAddress;
@@ -28,183 +33,48 @@ final class Auth extends UserManager {
 	private $throttling;
 	/** @var int the interval in seconds after which to resynchronize the session data with its authoritative source in the database */
 	private $sessionResyncInterval;
-	/** @var string the name of the cookie used for the 'remember me' feature */
-	private $rememberCookieName;
 
 	// TODO Adding PSR-7 twists
-	private $request;
-	private $response;
-//	private $session = [];
+	private $session;
 
 	/**
 	 * @param PdoDatabase|PdoDsn|\PDO $databaseConnection the database connection to operate on
-	 * @param string|null $ipAddress (optional) the IP address that should be used instead of the default setting (if any), e.g. when behind a proxy
-	 * @param string|null $dbTablePrefix (optional) the prefix for the names of all database tables used by this component
-	 * @param bool|null $throttling (optional) whether throttling should be enabled (e.g. in production) or disabled (e.g. during development)
-	 * @param int|null $sessionResyncInterval (optional) the interval in seconds after which to resynchronize the session data with its authoritative source in the database
-	 * @param string|null $dbSchema (optional) the schema name for all database tables used by this component
+	 * @param \Comet\Session $session PHP Session abstraction
+	 * @param array $params Set of parameters for better Auth tuning
+	 * REMOTE_ADDR Client IP-address to implement throttling and rate limiting
+	 * DB_TABLE_PREFIX (optional) the prefix for the names of all database tables used by this component
+	 * DB_SCHEMA (optional) the schema name for all database tables used by this component
+	 * THROTTLING (optional) whether throttling should be enabled (e.g. in production) or disabled (e.g. during development)
+	 * SESSION_RESYNC_INTERVAL (optional) the interval in seconds after which to resynchronize the session data with its authoritative source in the database
 	 */
-// TODO Refactoring with PSR-7 and Sessions in mind
-//	public function __construct($databaseConnection, $ipAddress = null, $dbTablePrefix = null, $throttling = null, $sessionResyncInterval = null, $dbSchema = null) {
-	public function __construct($databaseConnection, &$request = null, &$response = null) {
-//		parent::__construct($databaseConnection, $dbTablePrefix, $dbSchema);
-		parent::__construct($databaseConnection);
+	public function __construct($databaseConnection, &$session = null, $params = []) {
+		$this->session = &$session;
 
-		$this->request = &$request;
-		$this->response = &$response;
-		// TODO Init session with data
+		$this->ipAddress = array_key_exists('REMOTE_ADDR', $params) ? $params['REMOTE_ADDR'] : null;
+		$this->throttling = array_key_exists('THROTTLING', $params) ? (bool) $params['THROTTLING'] : true;
+		$this->sessionResyncInterval = array_key_exists('SESSION_RESYNC_INTERVAL', $params) ? (int) $params['SESSION_RESYNC_INTERVAL'] : 60 * 5;
 
-		// TODO SERVER legacy
-		// $this->ipAddress = !empty($ipAddress) ? $ipAddress : (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null);
-		$this->throttling = isset($throttling) ? (bool) $throttling : true;
-		$this->sessionResyncInterval = isset($sessionResyncInterval) ? ((int) $sessionResyncInterval) : (60 * 5);
-		// TODO Re-enable remembering
-		// $this->rememberCookieName = self::createRememberCookieName();
+		$dbTablePrefix = array_key_exists('DB_TABLE_PREFIX', $params) ? $params['DB_TABLE_PREFIX'] : null;
+		$dbSchema = array_key_exists('DB_SCHEMA', $params) ? $params['DB_SCHEMA'] : null;
+		parent::__construct($databaseConnection, $dbTablePrefix, $dbSchema);
 
-		// TODO Do not interfere with PSR-7
-		// $this->initSessionIfNecessary();
-		// $this->enhanceHttpSecurity();
-
-		// TODO Re-enable prolonged LoggedIn and Resync options
-		// $this->processRememberDirective();
-		// $this->resyncSessionIfNecessary();
-	}
-
-	/** Initializes the session and sets the correct configuration */
-	private function initSessionIfNecessary() {
-	/*
-		obsolete legacy
-
-		if (\session_status() === \PHP_SESSION_NONE) {
-			// use cookies to store session IDs
-			\ini_set('session.use_cookies', 1);
-			// use cookies only (do not send session IDs in URLs)
-			\ini_set('session.use_only_cookies', 1);
-			// do not send session IDs in URLs
-			\ini_set('session.use_trans_sid', 0);
-
-			// start the session (requests a cookie to be written on the client)
-			@Session::start();
-		}
-	*/
-	//	if ($this->request && $this->response) {//  && $this->request->session) {
-			//session
-			//$cookie_params = \session_get_cookie_params();
-			// TODO Move Set-Cookie to appropriate place
-			//$this->connection->__header['Set-Cookie'] = array($session_name . '=' . $sid
-			//    . (empty($cookie_params['domain']) ? '' : '; Domain=' . $cookie_params['domain'])
-			//    . (empty($cookie_params['lifetime']) ? '' : '; Max-Age=' . ($cookie_params['lifetime'] + \time()))
-			//    . (empty($cookie_params['path']) ? '' : '; Path=' . $cookie_params['path'])
-			//    . (empty($cookie_params['samesite']) ? '' : '; SameSite=' . $cookie_params['samesite'])
-			//    . (!$cookie_params['secure'] ? '' : '; Secure')
-			//    . (!$cookie_params['httponly'] ? '' : '; HttpOnly'));
-/*
-			$cookie_params = \session_get_cookie_params();
-			//$header['Set-Cookie'] = $session_name . '=' . $sid
-			// TODO Generate real sess id and store it to disk
-			$session_id = $this->request->sessionId();
-			$cookie = 'PHPSESSID' . '=' . $session_id
-			    . (empty($cookie_params['domain']) ? '' : '; Domain=' . $cookie_params['domain'])
-			    . (empty($cookie_params['lifetime']) ? '' : '; Max-Age=' . ($cookie_params['lifetime'] + \time()))
-			    . (empty($cookie_params['path']) ? '' : '; Path=' . $cookie_params['path'])
-			    . (empty($cookie_params['samesite']) ? '' : '; SameSite=' . $cookie_params['samesite'])
-			    . (!$cookie_params['secure'] ? '' : '; Secure')
-			    . (!$cookie_params['httponly'] ? '' : '; HttpOnly');
-echo "\n--- SESS_COOKIE\n";
-var_dump($cookie);
-			$this->response = $this->response->withAddedHeader('Set-Cookie', $cookie);
-echo "\n--- MEDIAL RESPONSE HEADERS";
-var_dump($this->response->getHeaders());
-*/
-		//	if (!$this->request->session) {
-
-		//	}
-		//}
-	}
-
-	/** Improves the application's security over HTTP(S) by setting specific headers */
-	private function enhanceHttpSecurity() {
-		// remove exposure of PHP version (at least where possible)
-		\header_remove('X-Powered-By');
-
-		// if the user is signed in
-		if ($this->isLoggedIn()) {
-			// prevent clickjacking
-			\header('X-Frame-Options: sameorigin');
-			// prevent content sniffing (MIME sniffing)
-			\header('X-Content-Type-Options: nosniff');
-
-			// disable caching of potentially sensitive data
-			\header('Cache-Control: no-store, no-cache, must-revalidate', true);
-			\header('Expires: Thu, 19 Nov 1981 00:00:00 GMT', true);
-			\header('Pragma: no-cache', true);
-		}
-	}
-
-	/** Checks if there is a "remember me" directive set and handles the automatic login (if appropriate) */
-	private function processRememberDirective() {
-		// if the user is not signed in yet
-		if (!$this->isLoggedIn()) {
-			// if there is currently no cookie for the 'remember me' feature
-			if (!isset($_COOKIE[$this->rememberCookieName])) {
-				// if an old cookie for that feature from versions v1.x.x to v6.x.x has been found
-				if (isset($_COOKIE['auth_remember'])) {
-					// use the value from that old cookie instead
-					$_COOKIE[$this->rememberCookieName] = $_COOKIE['auth_remember'];
-				}
-			}
-
-			// if a remember cookie is set
-			if (isset($_COOKIE[$this->rememberCookieName])) {
-				// assume the cookie and its contents to be invalid until proven otherwise
-				$valid = false;
-
-				// split the cookie's content into selector and token
-				$parts = \explode(self::COOKIE_CONTENT_SEPARATOR, $_COOKIE[$this->rememberCookieName], 2);
-
-				// if both selector and token were found
-				if (!empty($parts[0]) && !empty($parts[1])) {
-					try {
-						$rememberData = $this->db->selectRow(
-							'SELECT a.user, a.token, a.expires, b.email, b.username, b.status, b.roles_mask, b.force_logout FROM ' . $this->makeTableName('users_remembered') . ' AS a JOIN ' . $this->makeTableName('users') . ' AS b ON a.user = b.id WHERE a.selector = ?',
-							[ $parts[0] ]
-						);
-					}
-					catch (Error $e) {
-						throw new DatabaseError($e->getMessage());
-					}
-
-					if (!empty($rememberData)) {
-						if ($rememberData['expires'] >= \time()) {
-							if (\password_verify($parts[1], $rememberData['token'])) {
-								// the cookie and its contents have now been proven to be valid
-								$valid = true;
-
-								$this->onLoginSuccessful($rememberData['user'], $rememberData['email'], $rememberData['username'], $rememberData['status'], $rememberData['roles_mask'], $rememberData['force_logout'], true);
-							}
-						}
-					}
-				}
-
-				// if the cookie or its contents have been invalid
-				if (!$valid) {
-					// mark the cookie as such to prevent any further futile attempts
-					$this->setRememberCookie('', '', \time() + 60 * 60 * 24 * 365.25);
-				}
-			}
-		}
+		$this->resyncSessionIfNecessary();
 	}
 
 	private function resyncSessionIfNecessary() {
 		// if the user is signed in
 		if ($this->isLoggedIn()) {
 			// the following session field may not have been initialized for sessions that had already existed before the introduction of this feature
-			if (!isset($_SESSION[self::SESSION_FIELD_LAST_RESYNC])) {
-				$_SESSION[self::SESSION_FIELD_LAST_RESYNC] = 0;
+//			if (!isset($_SESSION[self::SESSION_FIELD_LAST_RESYNC])) {
+//				$_SESSION[self::SESSION_FIELD_LAST_RESYNC] = 0;
+//			}
+			if (!$this->session->get(self::SESSION_FIELD_LAST_RESYNC)) {
+				$this->session->set(self::SESSION_FIELD_LAST_RESYNC, 0);
 			}
 
 			// if it's time for resynchronization
-			if (($_SESSION[self::SESSION_FIELD_LAST_RESYNC] + $this->sessionResyncInterval) <= \time()) {
+//			if (($_SESSION[self::SESSION_FIELD_LAST_RESYNC] + $this->sessionResyncInterval) <= \time()) {
+			if ((!$this->session->get(self::SESSION_FIELD_LAST_RESYNC) + $this->sessionResyncInterval) <= \time()) {
 				// fetch the authoritative data from the database again
 				try {
 					$authoritativeData = $this->db->selectRow(
@@ -219,12 +89,16 @@ var_dump($this->response->getHeaders());
 				// if the user's data has been found
 				if (!empty($authoritativeData)) {
 					// the following session field may not have been initialized for sessions that had already existed before the introduction of this feature
-					if (!isset($_SESSION[self::SESSION_FIELD_FORCE_LOGOUT])) {
-						$_SESSION[self::SESSION_FIELD_FORCE_LOGOUT] = 0;
+//					if (!isset($_SESSION[self::SESSION_FIELD_FORCE_LOGOUT])) {
+//						$_SESSION[self::SESSION_FIELD_FORCE_LOGOUT] = 0;
+//					}
+					if (!$this->session->get(self::SESSION_FIELD_FORCE_LOGOUT)) {
+						$this->session->set(self::SESSION_FIELD_FORCE_LOGOUT, 0);
 					}
 
 					// if the counter that keeps track of forced logouts has been incremented
-					if ($authoritativeData['force_logout'] > $_SESSION[self::SESSION_FIELD_FORCE_LOGOUT]) {
+					//if ($authoritativeData['force_logout'] > $_SESSION[self::SESSION_FIELD_FORCE_LOGOUT]) {
+					if ($authoritativeData['force_logout'] > $this->session->get(self::SESSION_FIELD_FORCE_LOGOUT)) {
 						// the user must be signed out
 						$this->logOut();
 					}
@@ -241,7 +115,8 @@ var_dump($this->response->getHeaders());
 						$_SESSION[self::SESSION_FIELD_LAST_RESYNC] = \time();
 						*/
 
-						$this->request->session->put([
+						//$this->request->session->put([
+						$this->session->put([
 							self::SESSION_FIELD_EMAIL => $authoritativeData['email'],
 							self::SESSION_FIELD_USERNAME => $authoritativeData['username'],
 							self::SESSION_FIELD_STATUS => (int) $authoritativeData['status'],
@@ -450,33 +325,9 @@ var_dump($this->response->getHeaders());
 	 * @throws AuthError if an internal problem occurred (do *not* catch)
 	 */
 	public function logOut() {
-echo "\nAUTH:LOGOUT()";
 		// if the user has been signed in
 		if ($this->isLoggedIn()) {
-echo "\nAUTH:LOGOUT():LOGGED-IN";
-			// retrieve any locally existing remember directive
-			$rememberDirectiveSelector = $this->getRememberDirectiveSelector();
 
-			// if such a remember directive exists
-			if (isset($rememberDirectiveSelector)) {
-				// delete the local remember directive
-				$this->deleteRememberDirectiveForUserById(
-					$this->getUserId(),
-					$rememberDirectiveSelector
-				);
-			}
-/*
-			// remove all session variables maintained by this library
-			unset($_SESSION[self::SESSION_FIELD_LOGGED_IN]);
-			unset($_SESSION[self::SESSION_FIELD_USER_ID]);
-			unset($_SESSION[self::SESSION_FIELD_EMAIL]);
-			unset($_SESSION[self::SESSION_FIELD_USERNAME]);
-			unset($_SESSION[self::SESSION_FIELD_STATUS]);
-			unset($_SESSION[self::SESSION_FIELD_ROLES]);
-			unset($_SESSION[self::SESSION_FIELD_REMEMBERED]);
-			unset($_SESSION[self::SESSION_FIELD_LAST_RESYNC]);
-			unset($_SESSION[self::SESSION_FIELD_FORCE_LOGOUT]);
-*/
 			// TODO Check request and session exists
 			$this->request->session->forget([
 				self::SESSION_FIELD_LOGGED_IN,
@@ -503,31 +354,23 @@ echo "\nAUTH:LOGOUT():LOGGED-IN";
 			throw new NotLoggedInException();
 		}
 
-		// determine the expiry date of any locally existing remember directive
-		$previousRememberDirectiveExpiry = $this->getRememberDirectiveExpiry();
-
 		// schedule a forced logout in all sessions
 		$this->forceLogoutForUserById($this->getUserId());
 
 		// the following session field may not have been initialized for sessions that had already existed before the introduction of this feature
-		if (!isset($_SESSION[self::SESSION_FIELD_FORCE_LOGOUT])) {
-			$_SESSION[self::SESSION_FIELD_FORCE_LOGOUT] = 0;
+//		if (!isset($_SESSION[self::SESSION_FIELD_FORCE_LOGOUT])) {
+//			$_SESSION[self::SESSION_FIELD_FORCE_LOGOUT] = 0;
+//		}
+		if (!$this->session->get(self::SESSION_FIELD_FORCE_LOGOUT)) {
+			$this->session->set(self::SESSION_FIELD_FORCE_LOGOUT, 0);
 		}
 
 		// ensure that we will simply skip or ignore the next forced logout (which we have just caused) in the current session
-		$_SESSION[self::SESSION_FIELD_FORCE_LOGOUT]++;
+		//$_SESSION[self::SESSION_FIELD_FORCE_LOGOUT]++;
+		$this->session->set(self::SESSION_FIELD_FORCE_LOGOUT, $this->session->get(self::SESSION_FIELD_FORCE_LOGOUT) + 1);
 
 		// re-generate the session ID to prevent session fixation attacks (requests a cookie to be written on the client)
 		Session::regenerate(true);
-
-		// if there had been an existing remember directive previously
-		if (isset($previousRememberDirectiveExpiry)) {
-			// restore the directive with the old expiry date but new credentials
-			$this->createRememberDirective(
-				$this->getUserId(),
-				$previousRememberDirectiveExpiry - \time()
-			);
-		}
 	}
 
 	/**
@@ -554,95 +397,16 @@ echo "\nAUTH:LOGOUT():LOGGED-IN";
 	 */
 	public function destroySession() {
 		// remove all session variables without exception
-		$_SESSION = [];
+//		$_SESSION = [];
+		$this->session->flush();
 		// delete the session cookie
-		$this->deleteSessionCookie();
+//		$this->deleteSessionCookie();
 		// let PHP destroy the session
-		\session_destroy();
-	}
-
-	/**
-	 * Creates a new directive keeping the user logged in ("remember me")
-	 *
-	 * @param int $userId the user ID to keep signed in
-	 * @param int $duration the duration in seconds
-	 * @throws AuthError if an internal problem occurred (do *not* catch)
-	 */
-	private function createRememberDirective($userId, $duration) {
-		$selector = self::createRandomString(24);
-		$token = self::createRandomString(32);
-		$tokenHashed = \password_hash($token, \PASSWORD_DEFAULT);
-		$expires = \time() + ((int) $duration);
-
-		try {
-			$this->db->insert(
-				$this->makeTableNameComponents('users_remembered'),
-				[
-					'user' => $userId,
-					'selector' => $selector,
-					'token' => $tokenHashed,
-					'expires' => $expires
-				]
-			);
-		}
-		catch (Error $e) {
-			throw new DatabaseError($e->getMessage());
-		}
-
-		$this->setRememberCookie($selector, $token, $expires);
-	}
-
-	protected function deleteRememberDirectiveForUserById($userId, $selector = null) {
-		parent::deleteRememberDirectiveForUserById($userId, $selector);
-
-		$this->setRememberCookie(null, null, \time() - 3600);
-	}
-
-	/**
-	 * Sets or updates the cookie that manages the "remember me" token
-	 *
-	 * @param string|null $selector the selector from the selector/token pair
-	 * @param string|null $token the token from the selector/token pair
-	 * @param int $expires the UNIX time in seconds which the token should expire at
-	 * @throws AuthError if an internal problem occurred (do *not* catch)
-	 */
-	private function setRememberCookie($selector, $token, $expires) {
-		$params = \session_get_cookie_params();
-
-		if (isset($selector) && isset($token)) {
-			$content = $selector . self::COOKIE_CONTENT_SEPARATOR . $token;
-		}
-		else {
-			$content = '';
-		}
-
-		// save the cookie with the selector and token (requests a cookie to be written on the client)
-		$cookie = new Cookie($this->rememberCookieName);
-		$cookie->setValue($content);
-		$cookie->setExpiryTime($expires);
-		$cookie->setPath($params['path']);
-		$cookie->setDomain($params['domain']);
-		$cookie->setHttpOnly($params['httponly']);
-		$cookie->setSecureOnly($params['secure']);
-		$result = $cookie->save();
-
-		if ($result === false) {
-			throw new HeadersAlreadySentError();
-		}
-
-		// if we've been deleting the cookie above
-		if (!isset($selector) || !isset($token)) {
-			// attempt to delete a potential old cookie from versions v1.x.x to v6.x.x as well (requests a cookie to be written on the client)
-			$cookie = new Cookie('auth_remember');
-			$cookie->setPath((!empty($params['path'])) ? $params['path'] : '/');
-			$cookie->setDomain($params['domain']);
-			$cookie->setHttpOnly($params['httponly']);
-			$cookie->setSecureOnly($params['secure']);
-			$cookie->delete();
-		}
+//		\session_destroy();
 	}
 
 	protected function onLoginSuccessful($userId, $email, $username, $status, $roles, $forceLogout, $remembered) {
+
 		// update the timestamp of the user's last login
 		try {
 			$this->db->update(
@@ -655,28 +419,10 @@ echo "\nAUTH:LOGOUT():LOGGED-IN";
 			throw new DatabaseError($e->getMessage());
 		}
 
-		// TODO Do not use parent callback, cause it depends on global $_SESSION
-		// parent::onLoginSuccessful($userId, $email, $username, $status, $roles, $forceLogout, $remembered);
-
 		// re-generate the session ID to prevent session fixation attacks (requests a cookie to be written on the client)
-
 		// TODO Use PSR-7 Session
 		// Session::regenerate(true);
-/*
- 		TODO Replace $_SESSION with PSR-7 Session
 
-		// save the user data in the session variables maintained by this library
-		$_SESSION[self::SESSION_FIELD_LOGGED_IN] = true;
-		$_SESSION[self::SESSION_FIELD_USER_ID] = (int) $userId;
-		$_SESSION[self::SESSION_FIELD_EMAIL] = $email;
-		$_SESSION[self::SESSION_FIELD_USERNAME] = $username;
-		$_SESSION[self::SESSION_FIELD_STATUS] = (int) $status;
-		$_SESSION[self::SESSION_FIELD_ROLES] = (int) $roles;
-		$_SESSION[self::SESSION_FIELD_FORCE_LOGOUT] = (int) $forceLogout;
-		$_SESSION[self::SESSION_FIELD_REMEMBERED] = $remembered;
-		$_SESSION[self::SESSION_FIELD_LAST_RESYNC] = \time();
-*/
-echo "\n-- AUTH PUT many data to SESS";
 		$this->request->session->put([
 			self::SESSION_FIELD_LOGGED_IN => true,
 			self::SESSION_FIELD_USER_ID => (int) $userId,
@@ -696,6 +442,7 @@ echo "\n-- AUTH PUT many data to SESS";
 	 *
 	 * @throws AuthError if an internal problem occurred (do *not* catch)
 	 */
+/*
 	private function deleteSessionCookie() {
 		$params = \session_get_cookie_params();
 
@@ -711,7 +458,7 @@ echo "\n-- AUTH PUT many data to SESS";
 			throw new HeadersAlreadySentError();
 		}
 	}
-
+*/
 	/**
 	 * Confirms an email address (and activates the account) by supplying the correct selector/token pair
 	 *
@@ -850,10 +597,6 @@ echo "\n-- AUTH PUT many data to SESS";
 				);
 
 				$this->onLoginSuccessful($userData['id'], $userData['email'], $userData['username'], $userData['status'], $userData['roles_mask'], $userData['force_logout'], true);
-
-				if ($rememberDuration !== null) {
-					$this->createRememberDirective($userData['id'], $rememberDuration);
-				}
 			}
 		}
 
@@ -1191,19 +934,6 @@ echo "\n-- AUTH PUT many data to SESS";
 			if ((int) $userData['verified'] === 1) {
 				if (!isset($onBeforeSuccess) || (\is_callable($onBeforeSuccess) && $onBeforeSuccess($userData['id']) === true)) {
 					$this->onLoginSuccessful($userData['id'], $userData['email'], $userData['username'], $userData['status'], $userData['roles_mask'], $userData['force_logout'], false);
-
-					// continue to support the old parameter format
-					if ($rememberDuration === true) {
-						$rememberDuration = 60 * 60 * 24 * 28;
-					}
-					elseif ($rememberDuration === false) {
-						$rememberDuration = null;
-					}
-/* TODO Re-enable feature
-					if ($rememberDuration !== null) {
-						$this->createRememberDirective($userData['id'], $rememberDuration);
-					}
-*/
 					return;
 				}
 				else {
@@ -1455,10 +1185,6 @@ echo "\n-- AUTH PUT many data to SESS";
 			);
 
 			$this->onLoginSuccessful($idAndEmail['id'], $idAndEmail['email'], $userData['username'], $userData['status'], $userData['roles_mask'], $userData['force_logout'], true);
-
-			if ($rememberDuration !== null) {
-				$this->createRememberDirective($idAndEmail['id'], $rememberDuration);
-			}
 		}
 
 		return $idAndEmail;
@@ -1594,8 +1320,8 @@ echo "\n-- AUTH PUT many data to SESS";
 	public function isLoggedIn() {
 		// TODO Moving to PSR-7 compliant code
 		// return isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_LOGGED_IN]) && $_SESSION[self::SESSION_FIELD_LOGGED_IN] === true;
-echo "\n-- is logged in\n";
-var_dump($this->request->session->get(self::SESSION_FIELD_LOGGED_IN));
+//echo "\n-- is logged in\n";
+//var_dump($this->request->session->get(self::SESSION_FIELD_LOGGED_IN));
 		return
 			isset($this->request) &&
 			isset($this->request->session) &&
@@ -1774,10 +1500,12 @@ var_dump($this->request->session->get(self::SESSION_FIELD_LOGGED_IN));
 			return false;
 		}
 // TODO Fix for request->session
-		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_ROLES])) {
+//		if (isset($_SESSION) && isset($_SESSION[self::SESSION_FIELD_ROLES])) {
+		if (isset($this->session) && $this->session->get(self::SESSION_FIELD_ROLES)) {
 			$role = (int) $role;
 
-			return (((int) $_SESSION[self::SESSION_FIELD_ROLES]) & $role) === $role;
+			//return (((int) $_SESSION[self::SESSION_FIELD_ROLES]) & $role) === $role;
+			return (((int) $this->session->get(self::SESSION_FIELD_ROLES) & $role)) === $role;
 		}
 		else {
 			return false;
@@ -2032,68 +1760,6 @@ var_dump($this->request->session->get(self::SESSION_FIELD_LOGGED_IN));
 		);
 
 		return $descriptor . '_' . $token;
-	}
-
-	/**
-	 * Generates a unique cookie name for the 'remember me' feature
-	 *
-	 * @param string|null $sessionName (optional) the session name that the output should be based on
-	 * @return string
-	 */
-	public static function createRememberCookieName($sessionName = null) {
-		return self::createCookieName(
-			'remember',
-			($sessionName !== null) ? $sessionName : \session_name()
-		);
-	}
-
-	/**
-	 * Returns the selector of a potential locally existing remember directive
-	 *
-	 * @return string|null
-	 */
-	private function getRememberDirectiveSelector() {
-		if (isset($_COOKIE[$this->rememberCookieName])) {
-			$selectorAndToken = \explode(self::COOKIE_CONTENT_SEPARATOR, $_COOKIE[$this->rememberCookieName], 2);
-
-			return $selectorAndToken[0];
-		}
-		else {
-			return null;
-		}
-	}
-
-	/**
-	 * Returns the expiry date of a potential locally existing remember directive
-	 *
-	 * @return int|null
-	 */
-	private function getRememberDirectiveExpiry() {
-		// if the user is currently signed in
-		if ($this->isLoggedIn()) {
-			// determine the selector of any currently existing remember directive
-			$existingSelector = $this->getRememberDirectiveSelector();
-
-			// if there is currently a remember directive whose selector we have just retrieved
-			if (isset($existingSelector)) {
-				// fetch the expiry date for the given selector
-				$existingExpiry = $this->db->selectValue(
-					'SELECT expires FROM ' . $this->makeTableName('users_remembered') . ' WHERE selector = ? AND user = ?',
-					[
-						$existingSelector,
-						$this->getUserId()
-					]
-				);
-
-				// if an expiration date has been found
-				if (isset($existingExpiry)) {
-					// return the date
-					return (int) $existingExpiry;
-				}
-			}
-		}
-
-		return null;
 	}
 
 }

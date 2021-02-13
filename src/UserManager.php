@@ -1,9 +1,14 @@
 <?php
 
 /*
- * PHP-Auth (https://github.com/delight-im/PHP-Auth)
- * Copyright (c) delight.im (https://www.delight.im/)
- * Licensed under the MIT License (https://opensource.org/licenses/MIT)
+ * Auth
+ *
+ * PSR compatible auth library
+ * https://github.com/gotzmann/auth
+ *
+ * Copyright (c) Serge Gotsuliak
+ * Copyright (c) delight.im
+ * Licensed under the MIT License
  */
 
 namespace Auth;
@@ -230,20 +235,6 @@ abstract class UserManager {
 	 * @throws AuthError if an internal problem occurred (do *not* catch)
 	 */
 	protected function onLoginSuccessful($userId, $email, $username, $status, $roles, $forceLogout, $remembered) {
-		// re-generate the session ID to prevent session fixation attacks (requests a cookie to be written on the client)
-		// TODO Use PSR-7 Session
-		// Session::regenerate(true);
-
-		// save the user data in the session variables maintained by this library
-		$_SESSION[self::SESSION_FIELD_LOGGED_IN] = true;
-		$_SESSION[self::SESSION_FIELD_USER_ID] = (int) $userId;
-		$_SESSION[self::SESSION_FIELD_EMAIL] = $email;
-		$_SESSION[self::SESSION_FIELD_USERNAME] = $username;
-		$_SESSION[self::SESSION_FIELD_STATUS] = (int) $status;
-		$_SESSION[self::SESSION_FIELD_ROLES] = (int) $roles;
-		$_SESSION[self::SESSION_FIELD_FORCE_LOGOUT] = (int) $forceLogout;
-		$_SESSION[self::SESSION_FIELD_REMEMBERED] = $remembered;
-		$_SESSION[self::SESSION_FIELD_LAST_RESYNC] = \time();
 	}
 
 	/**
