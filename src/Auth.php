@@ -333,9 +333,6 @@ class Auth extends UserManager {
 		$this->forceLogoutForUserById($this->getUserId());
 
 		// the following session field may not have been initialized for sessions that had already existed before the introduction of this feature
-//		if (!isset($_SESSION[self::SESSION_FIELD_FORCE_LOGOUT])) {
-//			$_SESSION[self::SESSION_FIELD_FORCE_LOGOUT] = 0;
-//		}
 		if (!$this->session->get(self::SESSION_FIELD_FORCE_LOGOUT)) {
 			$this->session->set(self::SESSION_FIELD_FORCE_LOGOUT, 0);
 		}
@@ -412,28 +409,6 @@ class Auth extends UserManager {
 
 	}
 
-	/**
-	 * Deletes the session cookie on the client
-	 *
-	 * @throws AuthError if an internal problem occurred (do *not* catch)
-	 */
-/*
-	private function deleteSessionCookie() {
-		$params = \session_get_cookie_params();
-
-		// ask for the session cookie to be deleted (requests a cookie to be written on the client)
-		$cookie = new Cookie(\session_name());
-		$cookie->setPath($params['path']);
-		$cookie->setDomain($params['domain']);
-		$cookie->setHttpOnly($params['httponly']);
-		$cookie->setSecureOnly($params['secure']);
-		$result = $cookie->delete();
-
-		if ($result === false) {
-			throw new HeadersAlreadySentError();
-		}
-	}
-*/
 	/**
 	 * Confirms an email address (and activates the account) by supplying the correct selector/token pair
 	 *
