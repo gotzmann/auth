@@ -27,8 +27,7 @@ class Auth extends UserManager {
 	private $throttling;
 	/** @var int the interval in seconds after which to resynchronize the session data with its authoritative source in the database */
 	private $sessionResyncInterval;
-
-	// TODO Adding PSR-7 twists
+	/** @var \Comet\Session Abstraction of standard PHP session with PSR compatibility in mind */
 	private $session;
 
 	/**
@@ -41,8 +40,8 @@ class Auth extends UserManager {
 	 * THROTTLING (optional) whether throttling should be enabled (e.g. in production) or disabled (e.g. during development)
 	 * SESSION_RESYNC_INTERVAL (optional) the interval in seconds after which to resynchronize the session data with its authoritative source in the database
 	 */
-	public function __construct($databaseConnection, &$session = null, $params = []) {
-		$this->session = &$session;
+	public function __construct($databaseConnection, $session = null, $params = []) {
+		$this->session = $session;
 
 		$this->ipAddress = array_key_exists('REMOTE_ADDR', $params) ? $params['REMOTE_ADDR'] : null;
 		$this->throttling = array_key_exists('THROTTLING', $params) ? (bool) $params['THROTTLING'] : true;
