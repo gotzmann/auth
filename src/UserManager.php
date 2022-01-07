@@ -14,8 +14,6 @@
 namespace Comet;
 
 use Delight\Base64\Base64;
-// TODO Should use PSR-7 Sessions here
-// use Delight\Cookie\Session;
 use Delight\Db\PdoDatabase;
 use Delight\Db\PdoDsn;
 use Delight\Db\Throwable\Error;
@@ -129,9 +127,6 @@ abstract class UserManager {
 	 * @see confirmEmailAndSignIn
 	 */
 	protected function createUserInternal($requireUniqueUsername, $email, $password, $username = null, callable $callback = null) {
-		// TODO WTF?
-		// \ignore_user_abort(true);
-
 		$email = self::validateEmailAddress($email);
 		$password = self::validatePassword($password);
 

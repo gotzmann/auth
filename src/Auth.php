@@ -302,7 +302,8 @@ class Auth extends UserManager {
 		// if the user has been signed in
 		if ($this->isLoggedIn()) {
 
-			// TODO Check request and session exists
+			if (!$this->session) return; // Avoid exception
+
 			$this->session->forget([
 				self::SESSION_FIELD_LOGGED_IN,
 				self::SESSION_FIELD_USER_ID,
@@ -391,6 +392,8 @@ class Auth extends UserManager {
 		// re-generate the session ID to prevent session fixation attacks (requests a cookie to be written on the client)
 		// TODO Use PSR-7 Session
 		// Session::regenerate(true);
+
+		if (!$this->session) return; // Avoid exception
 
 		$this->session->put([
 			self::SESSION_FIELD_LOGGED_IN => true,
